@@ -1,0 +1,198 @@
+{
+  "report_metadata": {
+    "report_number": "REP-P6-EVAL-323F6C-20261114155134",
+    "project_title": "Automated Cloud-Aware Memory Forensics Using the Volatility Framework for Volatile Evidence Recovery",
+    "report_title": "Forensic Investigation Dossier & Analysis Report",
+    "generated_at": "2026-11-14 15:51:34 UTC",
+    "lead_investigator": "Dr. Forensic Evaluator"
+  },
+  "case_information": {
+    "id": 100,
+    "case_number": "P6-EVAL-323F6C",
+    "title": "Phase 6 Comprehensive Evaluation Case",
+    "description": "End-to-end verification and testing validation dossier",
+    "investigator": "Dr. Forensic Evaluator",
+    "environment_type": "IaaS (Virtual Machine)",
+    "status": "Open",
+    "priority": "Medium",
+    "created_at": "2026-11-14 15:51:34",
+    "updated_at": "2026-11-14 15:51:34",
+    "evidence_count": 2
+  },
+  "evidence_details": [
+    {
+      "id": 76,
+      "case_id": 100,
+      "filename": "blocked_tamper.raw",
+      "stored_path": "C:\\Users\\nikhi\\AppData\\Local\\Temp\\tmpwos6fa_f.raw",
+      "file_size_bytes": 420,
+      "sha256_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "evidence_type": "IaaS Memory Image",
+      "acquisition_source": "Guest VM Dump",
+      "acquisition_notes": null,
+      "uploaded_at": "2026-11-14 15:51:34",
+      "stored_filename": "tmpwos6fa_f.raw",
+      "file_extension": ".raw",
+      "acquisition_method": "Hypervisor Snapshot",
+      "operating_system": null,
+      "acquisition_datetime": null,
+      "investigator_notes": null,
+      "integrity_status": "Not Verified",
+      "last_verified_at": null,
+      "case_number": "P6-EVAL-323F6C"
+    },
+    {
+      "id": 75,
+      "case_id": 100,
+      "filename": "tamper_test.raw",
+      "stored_path": "C:\\Users\\nikhi\\AppData\\Local\\Temp\\tmpj6hxg7df.raw",
+      "file_size_bytes": 2450,
+      "sha256_hash": "dc9b6c6b5eddc5af19b1730cc10c8ff07056c9f9b2ae5b2c4ba2a373bebdf867",
+      "evidence_type": "IaaS Memory Image",
+      "acquisition_source": "Guest VM Dump",
+      "acquisition_notes": null,
+      "uploaded_at": "2026-11-14 15:51:34",
+      "stored_filename": "tmpj6hxg7df.raw",
+      "file_extension": ".raw",
+      "acquisition_method": "Hypervisor Snapshot",
+      "operating_system": null,
+      "acquisition_datetime": null,
+      "investigator_notes": null,
+      "integrity_status": "MISMATCH — File May Be Altered",
+      "last_verified_at": "2026-11-14 15:51:34",
+      "case_number": "P6-EVAL-323F6C"
+    }
+  ],
+  "volatility_analysis": {
+    "session": null,
+    "plugin_runs": [],
+    "total_runs": 0,
+    "total_artefacts": 0
+  },
+  "correlation_summary": {
+    "links": [],
+    "total_links": 0
+  },
+  "suspicious_findings": {
+    "findings": [],
+    "total_findings": 0,
+    "severity_counts": {
+      "High": 0,
+      "Medium": 0,
+      "Low": 0
+    }
+  },
+  "activity_timeline": [],
+  "cloud_evidence_classification": [
+    {
+      "id": 17,
+      "case_id": 100,
+      "service_model": "SaaS",
+      "provider_name": "Microsoft 365",
+      "evidence_type": "SaaS Audit Log",
+      "classification": "SaaS Audit Log",
+      "is_simulated": 0,
+      "authorisation_status": "Authorized",
+      "authorisation_details": null,
+      "acquisition_method": "Office 365 Management Activity API",
+      "acquisition_datetime": "2026-11-14 10:30:00 UTC",
+      "acquisition_source": "M365 Security & Compliance Center",
+      "investigator_name": "Cloud Security Researcher",
+      "evidence_id": null,
+      "vm_identifier": null,
+      "operating_system": null,
+      "saas_app_name": "Exchange Online",
+      "provider_export_type": "Unified Audit Log (UAL) Compliance Export",
+      "provider_assistance_status": "Self-Service Tenant Export",
+      "audit_log_reference": null,
+      "storage_reference": null,
+      "sha256_hash": "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
+      "access_limitations": "Direct access to underlying SaaS provider server RAM is generally controlled by the service provider. This application records provider-approved evidence sources and does not claim direct access to SaaS host memory. Evidence scope is limited to logs, exports, and compliance archives provided through authorized tenant APIs or subpoenas.",
+      "provenance_info": "[ACTUAL FORENSIC RECORD] Service Model: SaaS. Cloud Provider: Microsoft 365. Acquisition Source: M365 Security & Compliance Center. Acquisition Methodology: Office 365 Management Activity API. Investigator: Cloud Security Researcher.",
+      "notes": "Tenant mailbox audit search covering unauthorized message forwarding.",
+      "created_at": "2026-11-14 15:51:34",
+      "case_number": "P6-EVAL-323F6C",
+      "linked_memory_filename": null
+    },
+    {
+      "id": 16,
+      "case_id": 100,
+      "service_model": "IaaS",
+      "provider_name": "Amazon Web Services (AWS)",
+      "evidence_type": "IaaS Guest Memory Image",
+      "classification": "IaaS Guest Memory Image",
+      "is_simulated": 0,
+      "authorisation_status": "Authorized",
+      "authorisation_details": null,
+      "acquisition_method": "Hypervisor Memory Snapshot via AWS Snapshot API",
+      "acquisition_datetime": "2026-11-14 10:00:00 UTC",
+      "acquisition_source": "AWS EC2 Nitro Hypervisor",
+      "investigator_name": "Senior Forensic Analyst",
+      "evidence_id": null,
+      "vm_identifier": "i-0987654321fedcba",
+      "operating_system": "Windows Server 2022",
+      "saas_app_name": null,
+      "provider_export_type": null,
+      "provider_assistance_status": null,
+      "audit_log_reference": null,
+      "storage_reference": null,
+      "sha256_hash": "f5a5edd5e628646b96e1b6f0e9b31d3f9b2d8d85f6e87f6a7e5a4b3c2d1e0f9a",
+      "access_limitations": "IaaS evidence is scoped to the guest virtual machine boundary. Hypervisor state, physical host RAM outside the VM boundary, and adjacent tenant memory allocations are inaccessible to the tenant investigator. Volatile state captured represents the guest OS memory at snapshot time.",
+      "provenance_info": "[ACTUAL FORENSIC RECORD] Service Model: IaaS. Cloud Provider: Amazon Web Services (AWS). Acquisition Source: AWS EC2 Nitro Hypervisor. Acquisition Methodology: Hypervisor Memory Snapshot via AWS Snapshot API. Investigator: Senior Forensic Analyst.",
+      "notes": "Acquired with guest volatile memory frozen during live capture.",
+      "created_at": "2026-11-14 15:51:34",
+      "case_number": "P6-EVAL-323F6C",
+      "linked_memory_filename": null
+    }
+  ],
+  "chain_of_custody": [
+    {
+      "id": 27,
+      "case_id": 100,
+      "evidence_id": null,
+      "cloud_evidence_id": 16,
+      "action_performed": "Evidence Registered",
+      "action_datetime": "2026-11-14 15:51:34",
+      "performed_by": "Senior Forensic Analyst",
+      "previous_hash": null,
+      "current_hash": "f5a5edd5e628646b96e1b6f0e9b31d3f9b2d8d85f6e87f6a7e5a4b3c2d1e0f9a",
+      "evidence_source": "Amazon Web Services (AWS) (IaaS)",
+      "notes": "IaaS Evidence Registered: IaaS Guest Memory Image (Actual)",
+      "case_number": "P6-EVAL-323F6C"
+    },
+    {
+      "id": 28,
+      "case_id": 100,
+      "evidence_id": null,
+      "cloud_evidence_id": 17,
+      "action_performed": "Evidence Registered",
+      "action_datetime": "2026-11-14 15:51:34",
+      "performed_by": "Cloud Security Researcher",
+      "previous_hash": null,
+      "current_hash": "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
+      "evidence_source": "Microsoft 365 (SaaS)",
+      "notes": "SaaS Evidence Registered: SaaS Audit Log (Actual)",
+      "case_number": "P6-EVAL-323F6C"
+    }
+  ],
+  "conclusion": {
+    "executive_summary": "Automated memory forensic examination of case P6-EVAL-323F6C identified 0 suspicious indicator(s) (0 High, 0 Medium, 0 Low) across 2 evidence source(s) and 0 Volatility 3 plugin executions.",
+    "observations": [
+      "Evidence integrity verified against SHA-256 cryptographic baselines without alteration.",
+      "Cross-artefact correlation identified 0 verifiable linkage(s) between processes, sockets, and command strings.",
+      "Cloud evidence scoped strictly according to service model boundaries (IaaS guest VM vs SaaS provider host isolation)."
+    ],
+    "limitations": [
+      "Memory forensics reflects volatile artifacts existing in RAM at the exact moment of capture.",
+      "Volatility analysis is bounded by the availability of operating system symbol tables.",
+      "Direct host RAM extraction is architecturally restricted on SaaS multi-tenant environments; SaaS evidence relies on provider-approved compliance exports.",
+      "Heuristic suspicious activity flags represent investigative leads and do not constitute absolute proof of malicious compromise without corroboration."
+    ],
+    "recommendations": [
+      "Isolate affected virtual instances from production VPC networks to prevent lateral pivot.",
+      "Preserve hypervisor snapshot images and export audit logs under strict chain-of-custody protocols.",
+      "Conduct deep binary reverse-engineering on unlinked processes and suspicious PowerShell payloads identified.",
+      "Implement endpoint detection and response (EDR) sensors to augment volatile memory capture workflows."
+    ]
+  }
+}

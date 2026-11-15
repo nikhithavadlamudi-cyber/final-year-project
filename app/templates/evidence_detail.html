@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="evidence-detail-container">
+
+  <!-- Breadcrumb + Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb">
+        <a href="/">Dashboard</a> &gt; <a href="/evidence">Memory Evidence</a> &gt;
+        <span>{{ ev.filename }}</span>
+      </div>
+      <div class="dossier-title-row">
+        <span class="dossier-id font-mono">#{{ ev.id }}</span>
+        <h1 class="page-title">{{ ev.filename }}</h1>
+      </div>
+      <p class="page-subtitle">
+        Case: <a href="/cases/{{ ev.case_id }}" class="text-cyan">{{ ev.case_number }}</a>
+        &mdash; {{ ev.case_title }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary"
+              onclick="verifyIntegrity({{ ev.id }}, '{{ ev.filename }}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        Verify Integrity
+      </button>
+    </div>
+  </div>
+
+  <!-- Dossier Grid -->
+  <div class="dossier-card">
+    <div class="dossier-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="dossier-item">
+        <span class="dossier-label">Evidence Type</span>
+        <span class="badge-env {% if 'IaaS' in ev.evidence_type %}badge-iaas{% else %}badge-onprem{% endif %}">
+          {{ ev.evidence_type }}
+        </span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">File Extension</span>
+        <span class="dossier-value font-mono">{{ ev.file_extension }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">File Size</span>
+        <span class="dossier-value font-mono">{{ ev.human_size }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Integrity Status</span>
+        <span class="integrity-badge integrity-{{ ev.integrity_status|lower|replace(' ', '-')|replace('—', '') }}"
+              id="integrity-{{ ev.id }}">
+          {{ ev.integrity_status }}
+        </span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Staged (UTC)</span>
+        <span class="dossier-value text-small">{{ ev.uploaded_at }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Last Verified</span>
+        <span class="dossier-value text-small">{{ ev.last_verified_at or 'Never' }}</span>
+      </div>
+    </div>
+
+    <!-- SHA-256 Hash Block -->
+    <div class="hash-block">
+      <div class="hash-block-header">
+        <span class="dossier-label">SHA-256 Baseline Hash</span>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-sm btn-secondary" onclick="copyHash('{{ ev.sha256_hash }}', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Hash
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="verifyIntegrity({{ ev.id }}, '{{ ev.filename }}')">
+            Verify Now
+          </button>
+        </div>
+      </div>
+      <div class="hash-full font-mono">{{ ev.sha256_hash }}</div>
+      <small class="text-muted">
+        This baseline hash was computed using streaming SHA-256 immediately after upload.
+        Any change to the file bytes will produce a different hash and trigger a MISMATCH alert.
+      </small>
+    </div>
+  </div>
+
+  <!-- Acquisition Metadata Card -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3 class="section-title">Acquisition Provenance</h3>
+    </div>
+    <div class="dossier-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      <div class="dossier-item">
+        <span class="dossier-label">Acquisition Source</span>
+        <span class="dossier-value">{{ ev.acquisition_source or '—' }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Acquisition Method</span>
+        <span class="dossier-value">{{ ev.acquisition_method or '—' }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Target Operating System</span>
+        <span class="dossier-value">{{ ev.operating_system or 'Unknown / Not Specified' }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Original Acquisition Time</span>
+        <span class="dossier-value text-small">{{ ev.acquisition_datetime or 'Not recorded' }}</span>
+      </div>
+    </div>
+
+    {% if ev.investigator_notes %}
+    <div class="dossier-desc-block" style="margin-top:14px;">
+      <span class="dossier-label">Analyst Notes / Chain-of-Custody</span>
+      <p class="dossier-desc-text">{{ ev.investigator_notes }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Stored Filename (safe; path not shown) -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3 class="section-title">Safe Storage Reference</h3>
+    </div>
+    <div class="infobox">
+      The original file has been saved under a UUID-prefixed safe filename to prevent
+      path traversal and naming collisions. The internal file path is not displayed to
+      protect server infrastructure details.
+    </div>
+    <div class="dossier-grid" style="margin-top:12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="dossier-item">
+        <span class="dossier-label">Original Filename</span>
+        <span class="dossier-value font-mono">{{ ev.filename }}</span>
+      </div>
+      <div class="dossier-item">
+        <span class="dossier-label">Stored Filename (UUID-safe)</span>
+        <span class="dossier-value font-mono">{{ ev.stored_filename }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Integrity Verify Modal (reused from evidence.js) -->
+<div id="verifyModal" class="modal-overlay">
+  <div class="modal-dialog" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <span class="modal-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </span>
+        <h3 class="modal-title">Integrity Verification Result</h3>
+      </div>
+      <button class="modal-close" onclick="closeVerifyModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="verifyModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeVerifyModal()">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/evidence.js"></script>
+{% endblock %}

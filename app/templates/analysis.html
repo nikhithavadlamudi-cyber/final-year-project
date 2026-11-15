@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+
+<div class="evidence-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb"><a href="/">Dashboard</a> &gt; <span>Volatility Analysis</span></div>
+      <h1 class="page-title">Volatility 3 Memory Analysis</h1>
+      <p class="page-subtitle">
+        Select an uploaded memory image, choose plugins and start automated forensic analysis.
+        Results are stored per session and linked back to the case and evidence records.
+      </p>
+    </div>
+  </div>
+
+  <!-- Volatility Status Card -->
+  <div class="vol-status-card">
+    <div class="status-icon {% if vol_status.installed %}ok{% else %}err{% endif %}">
+      {% if vol_status.installed %}
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      {% else %}
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      {% endif %}
+    </div>
+    <div class="status-info">
+      {% if vol_status.installed %}
+      <h3>Volatility 3 — Installed &amp; Ready</h3>
+      <p>Symbol paths: {{ vol_status.symbol_paths | join(', ') or 'Default system paths' }}</p>
+      {% else %}
+      <h3>Volatility 3 — Not Available</h3>
+      <p>{{ vol_status.error or 'Unable to import volatility3. Run: pip install volatility3' }}</p>
+      {% endif %}
+    </div>
+    {% if vol_status.version %}
+    <span class="vol-version-badge">v{{ vol_status.version }}</span>
+    {% endif %}
+  </div>
+
+  <!-- Two-column layout: analysis form | sessions sidebar -->
+  <div class="analysis-layout">
+
+    <!-- LEFT: Analysis Start Form -->
+    <div>
+      <div class="section-card" id="analysisForm">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="module-chip">Phase 3</span>
+            <h2 class="section-title">Start New Analysis Session</h2>
+          </div>
+        </div>
+
+        <!-- Cloud boundary note -->
+        <div class="infobox" style="margin-bottom:1.2rem;">
+          <strong>Acquisition Boundary:</strong>
+          Volatility analyses existing memory images captured from the target system.
+          It does <em>not</em> access cloud provider RAM directly.
+          For <strong>IaaS</strong>: use a hypervisor snapshot of the guest VM.
+          For <strong>SaaS</strong>: host RAM is isolated by the provider — use log exports instead.
+        </div>
+
+        <!-- Step 1: Select Evidence -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="evidenceSelect"><strong>Step 1</strong> — Select Memory Image <span class="req">*</span></label>
+          <select id="evidenceSelect" name="evidence_id" onchange="onEvidenceSelect(this)" required
+                  style="width:100%; margin-top:.4rem;">
+            <option value="">— Choose an uploaded memory image —</option>
+            {% for ev in evidence_list %}
+            <option value="{{ ev.id }}">
+              [{{ ev.case_number }}] {{ ev.filename }} ({{ ev.human_size }}) — {{ ev.integrity_status }}
+            </option>
+            {% endfor %}
+          </select>
+          {% if not evidence_list %}
+          <small class="form-hint" style="color:#f59e0b;">No evidence uploaded yet. Go to <a href="/evidence">Memory Evidence</a> first.</small>
+          {% endif %}
+        </div>
+
+        <!-- Evidence details box (populated by JS) -->
+        <div id="evidenceInfoBox" style="display:none; margin-bottom:1rem;"></div>
+
+        <!-- Step 2: Plugin selection -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label><strong>Step 2</strong> — Select Plugins to Run</label>
+          <p style="font-size:.82rem;color:var(--text-secondary);margin:.3rem 0 .6rem;">
+            Leave all unchecked to run all OS-appropriate plugins automatically after OS detection.
+          </p>
+
+          <!-- OS filter buttons -->
+          <div class="plugin-filter-row">
+            <span style="font-size:.8rem;color:var(--text-secondary);">Filter:</span>
+            <button class="filter-btn" data-filter="all"     onclick="filterPlugins('all')">All</button>
+            <button class="filter-btn" data-filter="windows" onclick="filterPlugins('windows')">Windows</button>
+            <button class="filter-btn" data-filter="linux"   onclick="filterPlugins('linux')">Linux</button>
+            <button class="filter-btn" data-filter="any"     onclick="filterPlugins('any')">Any OS</button>
+            <span style="margin-left:auto;">
+              <label class="select-all-row">
+                <input type="checkbox" onchange="selectAllPlugins(this.checked)"> Select all visible
+              </label>
+            </span>
+          </div>
+
+          <!-- Plugin table -->
+          <div style="border:1px solid var(--border-color,#2a3045);border-radius:8px;overflow:hidden;">
+            <table class="plugin-catalog-table">
+              <thead>
+                <tr>
+                  <th style="width:36px;"></th>
+                  <th>Plugin Key</th>
+                  <th>Category</th>
+                  <th>OS</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for key, meta in plugins_catalog.items() %}
+                <tr class="plugin-row" data-os="{{ meta.os }}">
+                  <td><input type="checkbox" class="plugin-check" value="{{ key }}"></td>
+                  <td><code style="font-size:.8rem;">{{ key }}</code></td>
+                  <td><span class="cat-badge">{{ meta.category }}</span></td>
+                  <td><span class="os-badge {{ meta.os }}">{{ meta.os }}</span></td>
+                  <td style="font-size:.8rem;color:var(--text-secondary);">{{ meta.description }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Start button -->
+        <button id="startAnalysisBtn" class="btn btn-primary" onclick="startAnalysis()"
+                {% if not vol_status.installed %}disabled{% endif %}
+                style="margin-top:.5rem;">
+          {% if vol_status.installed %}
+          &#9654; Start Volatility Analysis
+          {% else %}
+          Volatility 3 Not Available
+          {% endif %}
+        </button>
+        {% if not vol_status.installed %}
+        <p style="font-size:.8rem;color:#f87171;margin-top:.5rem;">
+          Install Volatility 3 first: <code>pip install volatility3</code>
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- RIGHT: Sessions Sidebar -->
+    <div>
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Recent Sessions</h2>
+          <span style="font-size:.8rem;color:var(--text-secondary);">{{ sessions|length }} total</span>
+        </div>
+
+        {% if sessions %}
+        <div style="overflow-x:auto;">
+          <table class="sessions-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Evidence</th>
+                <th>OS</th>
+                <th>Status</th>
+                <th>Plugins</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in sessions[:20] %}
+              <tr>
+                <td><a href="/analysis/{{ s.id }}">#{{ s.id }}</a></td>
+                <td style="font-size:.78rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ s.filename }}">{{ s.filename }}</td>
+                <td style="font-size:.78rem;color:var(--text-secondary);">{{ s.detected_os[:20] if s.detected_os else '—' }}</td>
+                <td><span class="session-badge {{ s.status|lower }}">{{ s.status }}</span></td>
+                <td style="font-size:.78rem;">
+                  <span class="count-pill ok">✔{{ s.plugins_ok }}</span>
+                  <span class="count-pill fail">✘{{ s.plugins_failed }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:1.5rem;text-align:center;color:var(--text-secondary);font-size:.85rem;">
+          No analysis sessions yet.<br>
+          Select an evidence file above and click <em>Start Analysis</em>.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- .analysis-layout -->
+</div><!-- .evidence-page -->
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analysis.js"></script>
+{% endblock %}

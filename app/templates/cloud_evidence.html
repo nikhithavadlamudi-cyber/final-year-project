@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+<link rel="stylesheet" href="/static/css/phase4.css">
+<link rel="stylesheet" href="/static/css/phase5.css">
+
+<div class="evidence-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb"><a href="/">Dashboard</a> &gt; <span>Cloud Evidence Management</span></div>
+      <h1 class="page-title">Cloud Evidence Management &amp; Provenance</h1>
+      <p class="page-subtitle">
+        Distinguish between <strong>IaaS</strong> (Guest VM volatile memory snapshots) and
+        <strong>SaaS</strong> (Provider-approved audit logs &amp; compliance exports), enforce access limitation boundaries, and log chain-of-custody.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="openIaaSModal()">+ Register IaaS Evidence</button>
+      <button class="btn btn-primary" onclick="openSaaSModal()">+ Register SaaS Evidence</button>
+    </div>
+  </div>
+
+  <!-- Mandatory SaaS Host RAM Access Boundary Notice -->
+  <div class="saas-ram-notice">
+    <strong>Mandatory Cloud Boundary Principle:</strong>
+    Direct access to underlying SaaS provider server RAM is generally controlled by the service provider.
+    This application records provider-approved evidence sources and does not claim direct access to SaaS host memory.
+  </div>
+
+  <!-- Metrics Row -->
+  <div class="phase4-metrics">
+    <div class="p4-card">
+      <span class="p4-card-title">Total Cloud Records</span>
+      <span class="p4-card-val">{{ cloud_records|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">IaaS Guest VM Dumps</span>
+      <span class="p4-card-val low">{{ iaas_records|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">SaaS Audit &amp; Exports</span>
+      <span class="p4-card-val ok">{{ saas_records|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Chain of Custody Events</span>
+      <span class="p4-card-val">{{ custody_entries|length }}</span>
+    </div>
+  </div>
+
+  <!-- Main Multi-Tab Card -->
+  <div class="section-card">
+    <div class="result-tabs">
+      <button class="result-tab-btn active" data-tab="all_cloud" onclick="switchCloudTab('all_cloud')">
+        All Cloud Evidence ({{ cloud_records|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="iaas_tab" onclick="switchCloudTab('iaas_tab')">
+        IaaS Evidence ({{ iaas_records|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="saas_tab" onclick="switchCloudTab('saas_tab')">
+        SaaS Evidence ({{ saas_records|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="matrix_tab" onclick="switchCloudTab('matrix_tab')">
+        Classification Matrix
+      </button>
+      <button class="result-tab-btn" data-tab="custody_tab" onclick="switchCloudTab('custody_tab')">
+        Chain of Custody Ledger ({{ custody_entries|length }})
+      </button>
+    </div>
+
+    <!-- TAB 1: All Cloud Evidence -->
+    <div class="result-tab-panel active" data-tab="all_cloud">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Unified registry of cloud evidence across IaaS virtual machines and SaaS applications.
+        </span>
+        <input class="tab-search" style="max-width:280px;margin-bottom:0;" type="text"
+               placeholder="Search cloud evidence…" oninput="filterCloudTable(this, 'allCloudTable')">
+      </div>
+
+      {% if cloud_records %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="allCloudTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Case</th>
+              <th>Model</th>
+              <th>Provider</th>
+              <th>Classification</th>
+              <th>Provenance Status</th>
+              <th>Acquisition Method</th>
+              <th>Acquisition Time</th>
+              <th>Investigator</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in cloud_records %}
+            <tr>
+              <td><strong>#{{ r.id }}</strong></td>
+              <td><code>{{ r.case_number }}</code></td>
+              <td><span class="service-model-badge {{ r.service_model|lower }}">{{ r.service_model }}</span></td>
+              <td><strong>{{ r.provider_name }}</strong></td>
+              <td><span class="cat-badge">{{ r.classification }}</span></td>
+              <td>
+                {% if r.is_simulated %}
+                <span class="simulated-badge">Simulated Record</span>
+                {% else %}
+                <span class="actual-badge">Actual Evidence</span>
+                {% endif %}
+              </td>
+              <td style="font-size:0.8rem;">{{ r.acquisition_method }}</td>
+              <td style="font-size:0.8rem;color:var(--text-secondary);">{{ r.acquisition_datetime }}</td>
+              <td>{{ r.investigator_name }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2.5rem;text-align:center;color:var(--text-secondary);">
+        No cloud evidence records registered yet. Use the buttons above to add IaaS or SaaS evidence.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 2: IaaS Evidence Records -->
+    <div class="result-tab-panel" data-tab="iaas_tab">
+      <div class="iaas-boundary-notice">
+        <strong>IaaS Evidence Scope &amp; Boundaries:</strong>
+        {{ iaas_limitation_text }}
+      </div>
+
+      {% if iaas_records %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="iaasTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>VM Identifier</th>
+              <th>Provider</th>
+              <th>Operating System</th>
+              <th>Linked Memory Image</th>
+              <th>Acquisition Method</th>
+              <th>SHA-256 Hash</th>
+              <th>Authorisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in iaas_records %}
+            <tr>
+              <td><strong>#{{ r.id }}</strong></td>
+              <td><code>{{ r.vm_identifier or 'N/A' }}</code></td>
+              <td><strong>{{ r.provider_name }}</strong></td>
+              <td>{{ r.operating_system or 'Unknown' }}</td>
+              <td>
+                {% if r.linked_memory_filename %}
+                <span style="color:#38bdf8;">&#128190; {{ r.linked_memory_filename }}</span>
+                {% else %}
+                <span style="color:var(--text-secondary);">None</span>
+                {% endif %}
+              </td>
+              <td style="font-size:0.8rem;">{{ r.acquisition_method }}</td>
+              <td>
+                {% if r.sha256_hash %}
+                <code style="font-size:0.7rem;">{{ r.sha256_hash[:16] }}…</code>
+                {% else %}
+                <span style="color:var(--text-secondary);">—</span>
+                {% endif %}
+              </td>
+              <td><span class="badge-active">{{ r.authorisation_status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No IaaS evidence records registered.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 3: SaaS Evidence Records -->
+    <div class="result-tab-panel" data-tab="saas_tab">
+      <div class="saas-ram-notice">
+        <strong>SaaS Evidence Scope &amp; Boundaries:</strong>
+        {{ saas_limitation_text }}
+      </div>
+
+      {% if saas_records %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="saasTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Provider</th>
+              <th>SaaS Application</th>
+              <th>Provider Export Type</th>
+              <th>Audit Log Ref</th>
+              <th>Assistance Status</th>
+              <th>Provenance Status</th>
+              <th>Authorisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in saas_records %}
+            <tr>
+              <td><strong>#{{ r.id }}</strong></td>
+              <td><strong>{{ r.provider_name }}</strong></td>
+              <td><code>{{ r.saas_app_name or 'Cloud Service' }}</code></td>
+              <td>{{ r.provider_export_type or 'Compliance Export' }}</td>
+              <td style="font-size:0.8rem;">{{ r.audit_log_reference or '—' }}</td>
+              <td><span class="badge-active">{{ r.provider_assistance_status }}</span></td>
+              <td>
+                {% if r.is_simulated %}
+                <span class="simulated-badge">Simulated</span>
+                {% else %}
+                <span class="actual-badge">Actual</span>
+                {% endif %}
+              </td>
+              <td>{{ r.authorisation_status }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No SaaS evidence records registered.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 4: Classification Matrix -->
+    <div class="result-tab-panel" data-tab="matrix_tab">
+      <div style="margin-bottom:1rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Standard Digital Forensics Evidence Classification taxonomy employed by this platform:
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+        {% for cat in classifications %}
+        <div class="p4-card">
+          <span class="cat-badge" style="width:fit-content;margin-bottom:0.5rem;">{{ cat }}</span>
+          <div style="font-size:0.82rem;color:var(--text-primary);line-height:1.4;">
+            {% if cat == 'IaaS Guest Memory Image' %}
+            Volatile RAM extracted from a customer-administered virtual machine via hypervisor snapshot (AWS, Azure, GCP).
+            {% elif cat == 'SaaS Provider-Approved Export' %}
+            Structured archives exported directly from SaaS compliance APIs (Microsoft 365 Purview, Google Workspace Takeout).
+            {% elif cat == 'SaaS Audit Log' %}
+            Immutable tenant audit trail (Unified Audit Log, sign-in logs, admin activity journals).
+            {% elif cat == 'SaaS Application Log' %}
+            Application-specific interaction records, webhook payloads, and messaging telemetry.
+            {% elif cat == 'Provider-Assisted Evidence' %}
+            Evidence retrieved through provider support tickets, law-enforcement subpoenas, or dedicated cloud forensics teams.
+            {% elif cat == 'Supplementary System Log' %}
+            Corroborative telemetry such as VPC Flow Logs, CloudTrail trails, or host syslog feeds.
+            {% elif cat == 'Simulated Demonstration Record' %}
+            Synthetic test record for academic validation, explicitly isolated from production forensic findings.
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- TAB 5: Chain of Custody Ledger -->
+    <div class="result-tab-panel" data-tab="custody_tab">
+      <div style="margin-bottom:1rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Immutable chronological ledger tracking all evidence actions, hashing, verification, analysis, and report exports.
+        </span>
+      </div>
+
+      {% if custody_entries %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="custodyTable">
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Case</th>
+              <th>Action Performed</th>
+              <th>Investigator</th>
+              <th>Evidence Source</th>
+              <th>Cryptographic Hash</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in custody_entries %}
+            <tr>
+              <td style="font-family:monospace;font-size:0.78rem;">{{ c.action_datetime }}</td>
+              <td><code>{{ c.case_number }}</code></td>
+              <td><strong>{{ c.action_performed }}</strong></td>
+              <td>{{ c.performed_by }}</td>
+              <td>{{ c.evidence_source }}</td>
+              <td>
+                {% if c.current_hash %}
+                <code style="font-size:0.7rem;">{{ c.current_hash[:16] }}…</code>
+                {% else %}
+                <span style="color:var(--text-secondary);">—</span>
+                {% endif %}
+              </td>
+              <td style="font-size:0.8rem;color:var(--text-secondary);">{{ c.notes or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No chain of custody records found.
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- .section-card -->
+
+</div><!-- .evidence-page -->
+
+<!-- Modal: Register IaaS Evidence -->
+<div id="iaasModal" class="modal-overlay">
+  <div class="modal-content-p4" style="max-width:620px;">
+    <div class="modal-header-p4">
+      <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);">Register IaaS Guest VM Evidence</h3>
+      <button class="modal-close-btn" onclick="closeIaaSModal()">&times;</button>
+    </div>
+
+    <form onsubmit="handleCreateIaaS(event)">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Case <span class="req">*</span></label>
+          <select name="case_id" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            {% for c in cases %}
+            <option value="{{ c.id }}">{{ c.case_number }} &mdash; {{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Cloud Provider <span class="req">*</span></label>
+          <select name="provider_name" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="Amazon Web Services (AWS)">Amazon Web Services (AWS)</option>
+            <option value="Microsoft Azure">Microsoft Azure</option>
+            <option value="Google Cloud Platform (GCP)">Google Cloud Platform (GCP)</option>
+            <option value="OpenStack Private Cloud">OpenStack Private Cloud</option>
+            <option value="Oracle Cloud Infrastructure (OCI)">Oracle Cloud Infrastructure (OCI)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Virtual Machine Identifier <span class="req">*</span></label>
+          <input type="text" name="vm_identifier" placeholder="e.g., i-0a8b9c1d2e3f4g, vm-prod-web-01" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Operating System</label>
+          <input type="text" name="operating_system" value="Windows Server 2022 / Windows 10"
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Acquisition Method <span class="req">*</span></label>
+          <input type="text" name="acquisition_method" value="Hypervisor Memory Snapshot (AWS EC2 / Azure Snapshot API)" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Acquisition Date/Time (UTC) <span class="req">*</span></label>
+          <input type="text" name="acquisition_datetime" value="2026-03-01 10:00:00 UTC" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Acquisition Source <span class="req">*</span></label>
+          <input type="text" name="acquisition_source" value="EC2 Guest VM Hypervisor Capture" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Lead Investigator <span class="req">*</span></label>
+          <input type="text" name="investigator_name" value="Forensic Analyst" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Associate with Uploaded Memory Image (Task 2)</label>
+          <select name="evidence_id" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="">— None / Separate Capture —</option>
+            {% for ev in memory_evidence %}
+            <option value="{{ ev.id }}">{{ ev.filename }} ({{ ev.sha256_hash[:16] }}…)</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Evidence Type</label>
+          <input type="text" name="evidence_type" value="IaaS Guest Memory Image"
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Authorisation Status</label>
+          <select name="authorisation_status" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="Authorized">Authorized (Owner / Tenant Administrator)</option>
+            <option value="Judicial Warrant">Judicial Warrant / Subpoena</option>
+            <option value="Incident Response Mandate">Incident Response Retainer Mandate</option>
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Authorisation Scope / Ref</label>
+          <input type="text" name="authorisation_details" placeholder="e.g., IAM Role IR-Role-99, Case Ref W-2026"
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>SHA-256 Hash (if pre-computed)</label>
+        <input type="text" name="sha256_hash" placeholder="64-character hexadecimal SHA-256 hash"
+               style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+      </div>
+
+      <div class="form-group">
+        <label>Investigator Notes &amp; Observations</label>
+        <textarea name="notes" rows="2" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;"
+                  placeholder="Record acquisition anomalies, guest state, snapshot duration…"></textarea>
+      </div>
+
+      <div style="margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+        <input type="checkbox" id="iaas_sim" name="is_simulated">
+        <label for="iaas_sim" style="font-size:0.85rem;color:#fbbf24;cursor:pointer;">
+          Mark as Simulated Demonstration Record (Academic / Testing)
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.2rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeIaaSModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save IaaS Evidence Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Register SaaS Evidence -->
+<div id="saasModal" class="modal-overlay">
+  <div class="modal-content-p4" style="max-width:620px;">
+    <div class="modal-header-p4">
+      <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);">Register SaaS Evidence Record</h3>
+      <button class="modal-close-btn" onclick="closeSaaSModal()">&times;</button>
+    </div>
+
+    <!-- Mandatory SaaS boundary reminder inside modal -->
+    <div class="saas-ram-notice" style="margin-bottom:0.9rem;">
+      <strong>Cloud Scope Boundary:</strong>
+      Direct access to underlying SaaS provider server RAM is generally controlled by the service provider.
+      This form records provider-approved exports and audit logs.
+    </div>
+
+    <form onsubmit="handleCreateSaaS(event)">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Case <span class="req">*</span></label>
+          <select name="case_id" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            {% for c in cases %}
+            <option value="{{ c.id }}">{{ c.case_number }} &mdash; {{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>SaaS Provider <span class="req">*</span></label>
+          <select name="provider_name" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="Microsoft 365 / Entra ID">Microsoft 365 / Entra ID</option>
+            <option value="Google Workspace">Google Workspace</option>
+            <option value="Salesforce">Salesforce</option>
+            <option value="Slack Enterprise">Slack Enterprise Grid</option>
+            <option value="Box / Dropbox Business">Box / Dropbox Business</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>SaaS Application or Service <span class="req">*</span></label>
+          <input type="text" name="saas_app_name" placeholder="e.g., Exchange Online, OneDrive, Entra ID, Slack Channels" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Evidence Type <span class="req">*</span></label>
+          <select name="evidence_type" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="SaaS Provider-Approved Export">SaaS Provider-Approved Export</option>
+            <option value="SaaS Audit Log">SaaS Audit Log</option>
+            <option value="SaaS Application Log">SaaS Application Log</option>
+            <option value="Provider-Assisted Evidence">Provider-Assisted Evidence</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Provider-Approved Export Type <span class="req">*</span></label>
+          <input type="text" name="provider_export_type" value="Unified Audit Log (UAL) / Compliance Center PST Export" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Audit Log Reference</label>
+          <input type="text" name="audit_log_reference" placeholder="e.g., AuditLog-Search-2026-03-01.json"
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Acquisition Method <span class="req">*</span></label>
+          <input type="text" name="acquisition_method" value="Provider Compliance Search API / Admin Portal Takeout" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Collection Date/Time (UTC) <span class="req">*</span></label>
+          <input type="text" name="acquisition_datetime" value="2026-03-01 10:15:00 UTC" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Provider Assistance Status <span class="req">*</span></label>
+          <select name="provider_assistance_status" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="Self-Service Tenant Admin Export">Self-Service Tenant Admin Export</option>
+            <option value="Provider Support Assisted Request">Provider Support Assisted Request</option>
+            <option value="Subpoena / Law Enforcement Assisted">Subpoena / Law Enforcement Assisted</option>
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label>Lead Investigator <span class="req">*</span></label>
+          <input type="text" name="investigator_name" value="Forensic Analyst" required
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Acquisition Source</label>
+          <input type="text" name="acquisition_source" value="Cloud Service Provider Audit Export"
+                 style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+        </div>
+        <div class="form-group flex-1">
+          <label>Authorisation Status</label>
+          <select name="authorisation_status" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+            <option value="Authorized">Authorized (Tenant Administrator)</option>
+            <option value="Subpoena Mandate">Subpoena Mandate</option>
+            <option value="Legal Hold Compliance">Legal Hold Compliance</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Authorisation Details</label>
+        <input type="text" name="authorisation_details" placeholder="e.g., Tenant Global Admin Credential, Legal Case Mandate"
+               style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+      </div>
+
+      <div class="form-group">
+        <label>SHA-256 Hash of Export Archive</label>
+        <input type="text" name="sha256_hash" placeholder="64-character hexadecimal SHA-256 hash"
+               style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;">
+      </div>
+
+      <div class="form-group">
+        <label>Investigator Notes &amp; Access Limitations</label>
+        <textarea name="notes" rows="2" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.45rem;border:1px solid #2a3045;border-radius:4px;"
+                  placeholder="Record tenant export boundary, log retention window, missing audit events…"></textarea>
+      </div>
+
+      <div style="margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+        <input type="checkbox" id="saas_sim" name="is_simulated">
+        <label for="saas_sim" style="font-size:0.85rem;color:#fbbf24;cursor:pointer;">
+          Mark as Simulated Demonstration Record (Academic / Testing)
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.2rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeSaaSModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save SaaS Evidence Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/phase5.js"></script>
+{% endblock %}

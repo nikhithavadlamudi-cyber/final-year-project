@@ -1,0 +1,308 @@
+/*
+  Phase 3 — Volatility Analysis Hub Styles
+  ==========================================
+  Extends phase2.css. Dark cybersecurity theme.
+  CSS variables from style.css are reused.
+*/
+
+/* ── Vol3 Status Card ───────────────────────────────────────────────── */
+.vol-status-card {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 10px;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.5rem;
+}
+.vol-status-card .status-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.vol-status-card .status-icon.ok  { background: rgba(16,185,129,.15); color: #10b981; }
+.vol-status-card .status-icon.err { background: rgba(239,68,68,.15);  color: #ef4444; }
+.vol-status-card .status-info { flex: 1; }
+.vol-status-card .status-info h3 { margin: 0 0 .2rem; font-size: .95rem; color: var(--text-primary, #e2e8f0); }
+.vol-status-card .status-info p  { margin: 0; font-size: .8rem; color: var(--text-secondary, #94a3b8); }
+.vol-version-badge {
+    font-size: .78rem;
+    font-family: monospace;
+    background: rgba(99,102,241,.12);
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,.25);
+    border-radius: 20px;
+    padding: .18rem .7rem;
+    white-space: nowrap;
+}
+
+/* ── Plugin Catalog Table ───────────────────────────────────────────── */
+.plugin-catalog-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+.plugin-catalog-table th {
+    background: var(--surface-3, #131929);
+    color: var(--text-secondary, #94a3b8);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .7rem;
+    letter-spacing: .05em;
+    padding: .6rem .9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #2a3045);
+}
+.plugin-catalog-table td {
+    padding: .55rem .9rem;
+    border-bottom: 1px solid rgba(42,48,69,.5);
+    color: var(--text-primary, #e2e8f0);
+    vertical-align: middle;
+}
+.plugin-catalog-table tr:hover td { background: rgba(255,255,255,.025); }
+.plugin-catalog-table input[type="checkbox"] {
+    width: 15px; height: 15px; cursor: pointer; accent-color: #6366f1;
+}
+
+/* OS Family Badge */
+.os-badge {
+    display: inline-block;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .12rem .55rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.os-badge.windows { background: rgba(14,165,233,.12); color: #38bdf8; border: 1px solid rgba(14,165,233,.2); }
+.os-badge.linux   { background: rgba(234,179,8,.1);  color: #facc15; border: 1px solid rgba(234,179,8,.2);  }
+.os-badge.any     { background: rgba(99,102,241,.1);  color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+
+/* Category Badge */
+.cat-badge {
+    display: inline-block;
+    font-size: .68rem;
+    padding: .1rem .5rem;
+    border-radius: 4px;
+    background: rgba(148,163,184,.08);
+    color: var(--text-secondary, #94a3b8);
+    border: 1px solid rgba(148,163,184,.12);
+}
+
+/* ── Session Status Badges ──────────────────────────────────────────── */
+.session-badge {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    padding: .15rem .65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.session-badge.running   { background: rgba(245,158,11,.12); color: #f59e0b; border: 1px solid rgba(245,158,11,.25); animation: pulse-amber 1.5s infinite; }
+.session-badge.completed { background: rgba(16,185,129,.12); color: #10b981; border: 1px solid rgba(16,185,129,.25); }
+.session-badge.failed    { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.25);  }
+.session-badge.pending   { background: rgba(148,163,184,.1); color: #94a3b8; border: 1px solid rgba(148,163,184,.2); }
+
+@keyframes pulse-amber {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .6; }
+}
+
+/* ── Analysis Progress Spinner ──────────────────────────────────────── */
+.analysis-spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(99,102,241,.25);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+    vertical-align: middle;
+    margin-right: .5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-banner {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    background: rgba(99,102,241,.08);
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 8px;
+    padding: .9rem 1.2rem;
+    margin-bottom: 1.2rem;
+    color: #818cf8;
+    font-size: .88rem;
+}
+
+/* ── Tabbed Results (Analysis Detail Page) ──────────────────────────── */
+.result-tabs {
+    display: flex;
+    gap: .4rem;
+    border-bottom: 1px solid var(--border-color, #2a3045);
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+}
+.result-tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary, #94a3b8);
+    cursor: pointer;
+    font-size: .84rem;
+    padding: .55rem 1rem;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+}
+.result-tab-btn:hover  { color: var(--text-primary, #e2e8f0); }
+.result-tab-btn.active { color: #818cf8; border-bottom-color: #6366f1; font-weight: 600; }
+
+.result-tab-panel { display: none; }
+.result-tab-panel.active { display: block; }
+
+/* Expandable raw output pre block */
+.raw-output-toggle {
+    font-size: .78rem;
+    color: #818cf8;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: .3rem 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.raw-output-pre {
+    display: none;
+    background: #0d1117;
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 6px;
+    padding: .8rem 1rem;
+    font-size: .75rem;
+    font-family: monospace;
+    color: #94a3b8;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-top: .4rem;
+}
+.raw-output-pre.open { display: block; }
+
+/* Parsed-row table */
+.parsed-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+.parsed-table th {
+    background: var(--surface-3, #131929);
+    color: var(--text-secondary, #94a3b8);
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: .5rem .75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #2a3045);
+}
+.parsed-table td {
+    padding: .45rem .75rem;
+    border-bottom: 1px solid rgba(42,48,69,.5);
+    color: var(--text-primary, #e2e8f0);
+    word-break: break-word;
+    max-width: 300px;
+}
+.parsed-table tr:hover td { background: rgba(255,255,255,.025); }
+
+/* ── Analysis Hub Layout ────────────────────────────────────────────── */
+.analysis-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+@media (max-width: 1100px) { .analysis-layout { grid-template-columns: 1fr; } }
+
+.plugin-filter-row {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: .8rem;
+}
+.filter-btn {
+    font-size: .78rem;
+    padding: .28rem .75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color, #2a3045);
+    background: none;
+    color: var(--text-secondary, #94a3b8);
+    cursor: pointer;
+    transition: all .15s;
+}
+.filter-btn:hover, .filter-btn.active { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); color: #818cf8; }
+
+/* Session history table */
+.sessions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+}
+.sessions-table th {
+    background: var(--surface-3, #131929);
+    color: var(--text-secondary, #94a3b8);
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: .55rem .9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #2a3045);
+}
+.sessions-table td {
+    padding: .55rem .9rem;
+    border-bottom: 1px solid rgba(42,48,69,.5);
+    color: var(--text-primary, #e2e8f0);
+}
+.sessions-table tr:hover td { background: rgba(255,255,255,.025); }
+.sessions-table a { color: #818cf8; text-decoration: none; }
+.sessions-table a:hover { text-decoration: underline; }
+
+/* Plugin count pills */
+.count-pill { display: inline-flex; align-items: center; gap: .25rem; font-size: .75rem; padding: .1rem .5rem; border-radius: 20px; margin: 0 .1rem; }
+.count-pill.ok   { background: rgba(16,185,129,.1); color: #10b981; }
+.count-pill.fail { background: rgba(239,68,68,.1);  color: #f87171; }
+.count-pill.empty{ background: rgba(148,163,184,.08); color: #94a3b8; }
+
+/* Search input */
+.tab-search {
+    width: 100%;
+    padding: .5rem .9rem;
+    background: var(--surface-3, #131929);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 6px;
+    color: var(--text-primary, #e2e8f0);
+    font-size: .84rem;
+    margin-bottom: .9rem;
+    box-sizing: border-box;
+}
+.tab-search::placeholder { color: var(--text-secondary, #94a3b8); }
+.tab-search:focus { outline: none; border-color: rgba(99,102,241,.4); }
+
+/* Plugin run status in detail page */
+.run-status-pill {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .12rem .55rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.run-status-pill.success     { background: rgba(16,185,129,.12); color: #10b981; border: 1px solid rgba(16,185,129,.2); }
+.run-status-pill.empty       { background: rgba(148,163,184,.08); color: #94a3b8; border: 1px solid rgba(148,163,184,.15); }
+.run-status-pill.failed      { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+.run-status-pill.unsupported { background: rgba(245,158,11,.1); color: #f59e0b; border: 1px solid rgba(245,158,11,.2); }
+.run-status-pill.timeout     { background: rgba(239,68,68,.12); color: #f97316; border: 1px solid rgba(249,115,22,.2); }
+.run-status-pill.running     { background: rgba(99,102,241,.1); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+
+/* Select all checkbox row */
+.select-all-row { font-size: .82rem; color: var(--text-secondary, #94a3b8); margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; }

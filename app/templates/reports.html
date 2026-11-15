@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+<link rel="stylesheet" href="/static/css/phase4.css">
+<link rel="stylesheet" href="/static/css/phase5.css">
+
+<div class="evidence-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb"><a href="/">Dashboard</a> &gt; <span>Forensic Reports</span></div>
+      <h1 class="page-title">Automated Forensic Reporting Hub</h1>
+      <p class="page-subtitle">
+        Compile comprehensive academic digital forensics investigation reports incorporating
+        actual Volatility 3 artifacts, parent-child correlations, suspicious activity findings, authentic timelines, and cloud evidence provenance.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openGenerateReportModal()">
+        &#128196; Generate Investigation Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Academic Report Specifications Callout -->
+  <div class="infobox" style="margin-bottom:1.5rem;">
+    <strong>Forensic Report Standards:</strong>
+    Generated reports contain 10 structured forensic sections conforming to digital evidence reporting standards.
+    Both <strong>PDF</strong> (publication-ready document with running headers, footers, page numbering, and evidence integrity tables)
+    and <strong>JSON</strong> (machine-readable data interchange) formats are generated simultaneously.
+  </div>
+
+  <!-- Metrics Row -->
+  <div class="phase4-metrics">
+    <div class="p4-card">
+      <span class="p4-card-title">Reports Generated</span>
+      <span class="p4-card-val">{{ reports|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Documented Cases</span>
+      <span class="p4-card-val ok">{{ cases|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Analyzed Sessions</span>
+      <span class="p4-card-val low">{{ sessions|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Export Formats</span>
+      <span class="p4-card-val">PDF + JSON</span>
+    </div>
+  </div>
+
+  <!-- Reports Listing Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="module-chip">Phase 5</span>
+        <h2 class="section-title">Forensic Investigation Reports Registry</h2>
+      </div>
+      <span style="font-size:0.82rem;color:var(--text-secondary);">{{ reports|length }} records available</span>
+    </div>
+
+    {% if reports %}
+    <div class="report-card-grid">
+      {% for rep in reports %}
+      <div class="report-card">
+        <div>
+          <div class="report-card-header">
+            <span class="report-num">{{ rep.report_number }}</span>
+            <span class="badge-active">{{ rep.report_type }}</span>
+          </div>
+          <h3 class="report-title">{{ rep.title }}</h3>
+          <div class="report-meta-row">
+            <strong>Case:</strong> {{ rep.case_number }} &mdash; {{ rep.case_title }}
+          </div>
+          <div class="report-meta-row">
+            <strong>Lead Investigator:</strong> {{ rep.investigator }}
+          </div>
+          <div class="report-meta-row">
+            <strong>Analysis Profile:</strong>
+            {{ rep.detected_os or 'Windows / Linux' }}
+            {% if rep.volatility_version %}(Vol3 v{{ rep.volatility_version }}){% endif %}
+          </div>
+          <div class="report-meta-row" style="margin-top:0.4rem;">
+            <span class="severity-badge {% if rep.summary_high_severity_count > 0 %}high{% else %}medium{% endif %}">
+              {{ rep.summary_findings_count }} Findings ({{ rep.summary_high_severity_count }} High)
+            </span>
+            <span style="font-size:0.75rem;color:var(--text-secondary);margin-left:0.5rem;">
+              {{ rep.generated_at }}
+            </span>
+          </div>
+        </div>
+
+        <div class="report-actions">
+          <a href="/reports/{{ rep.id }}/download/pdf" class="btn-pdf" target="_blank">
+            &#128196; Download PDF Report
+          </a>
+          <a href="/reports/{{ rep.id }}/download/json" class="btn-json" target="_blank">
+            &#123;&nbsp;&#125; Download JSON
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2.5rem;text-align:center;color:var(--text-secondary);">
+      <p>No forensic reports generated yet.</p>
+      <p style="font-size:0.85rem;margin-top:0.5rem;">
+        Click <strong>Generate Investigation Report</strong> above to compile a comprehensive report from your active case data.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+</div><!-- .evidence-page -->
+
+<!-- Modal: Generate Investigation Report -->
+<div id="reportModal" class="modal-overlay">
+  <div class="modal-content-p4" style="max-width:580px;">
+    <div class="modal-header-p4">
+      <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);">Compile Forensic Investigation Report</h3>
+      <button class="modal-close-btn" onclick="closeGenerateReportModal()">&times;</button>
+    </div>
+
+    <form onsubmit="handleGenerateReport(event)">
+      <div class="form-group" style="margin-bottom:0.9rem;">
+        <label><strong>Select Investigation Case</strong> <span class="req">*</span></label>
+        <select name="case_id" required style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.5rem;border:1px solid #2a3045;border-radius:4px;margin-top:0.3rem;">
+          {% for c in cases %}
+          <option value="{{ c.id }}">{{ c.case_number }} &mdash; {{ c.title }}</option>
+          {% endfor %}
+        </select>
+        <small class="form-hint" style="color:var(--text-secondary);font-size:0.75rem;">
+          All evidence, findings, and cloud classifications linked to this case will be aggregated.
+        </small>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0.9rem;">
+        <label><strong>Target Volatility 3 Analysis Session</strong> (Optional)</label>
+        <select name="session_id" style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.5rem;border:1px solid #2a3045;border-radius:4px;margin-top:0.3rem;">
+          <option value="">— Include Most Recent Session / Case-Level Findings —</option>
+          {% for s in sessions %}
+          <option value="{{ s.id }}">Session #{{ s.id }} &mdash; [{{ s.case_number }}] {{ s.filename }} ({{ s.detected_os or 'OS' }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0.9rem;">
+        <label><strong>Custom Report Title</strong> (Optional)</label>
+        <input type="text" name="report_title" placeholder="e.g., Compromised EC2 Virtual Machine Memory Triage &amp; Evidence Dossier"
+               style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.5rem;border:1px solid #2a3045;border-radius:4px;margin-top:0.3rem;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.2rem;">
+        <label><strong>Lead Investigator Identity</strong></label>
+        <input type="text" name="investigator" value="Lead Cyber Security Analyst"
+               style="width:100%;background:#0d1117;color:#e2e8f0;padding:0.5rem;border:1px solid #2a3045;border-radius:4px;margin-top:0.3rem;">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeGenerateReportModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Generate PDF &amp; JSON Report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/phase5.js"></script>
+{% endblock %}

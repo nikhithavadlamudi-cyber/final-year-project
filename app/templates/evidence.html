@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="evidence-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb"><a href="/">Dashboard</a> &gt; <span>Memory Evidence</span></div>
+      <h1 class="page-title">Memory Evidence Ingestion</h1>
+      <p class="page-subtitle">
+        Upload authorised volatile memory images &mdash; SHA-256 integrity is calculated immediately on receipt.
+        Supported formats: {% for ext in allowed_extensions %}<code>{{ ext }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
+        Max size: <strong>{{ max_upload_mb }} MB</strong>.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openUploadPanel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Upload Memory Image
+      </button>
+    </div>
+  </div>
+
+  <!-- Upload Panel (collapsible) -->
+  <div id="uploadPanel" class="section-card upload-panel" style="display:none;">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="module-chip">Phase 2</span>
+        <h2 class="section-title">Stage New Memory Image Evidence</h2>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="closeUploadPanel()">&#x2715; Close</button>
+    </div>
+
+    <!-- Cloud Boundary Notice -->
+    <div class="infobox">
+      <strong>Acquisition Boundary Reminder:</strong>
+      This form accepts authorised memory images already captured from the target system.
+      Volatility analyses existing dumps — it does <em>not</em> directly access cloud provider RAM.
+      For <strong>IaaS</strong>, provide a hypervisor snapshot of the guest VM.
+      For <strong>SaaS</strong>, record provider-issued audit exports under the separate Cloud Evidence category.
+    </div>
+
+    <form id="evidenceUploadForm" enctype="multipart/form-data" onsubmit="handleEvidenceUpload(event)">
+      <div class="form-row">
+        <!-- Case Selection -->
+        <div class="form-group flex-1">
+          <label for="upload_case_id">Associate With Case <span class="req">*</span></label>
+          <select id="upload_case_id" name="case_id" required>
+            <option value="">— Select Investigation Case —</option>
+            {% for case in cases %}
+            <option value="{{ case.id }}">{{ case.case_number }} &mdash; {{ case.title }}</option>
+            {% endfor %}
+          </select>
+          <small class="form-hint">Create a case first if none appear above.</small>
+        </div>
+        <!-- Evidence Type -->
+        <div class="form-group flex-1">
+          <label for="upload_ev_type">Evidence Category <span class="req">*</span></label>
+          <select id="upload_ev_type" name="evidence_type">
+            <option value="IaaS Memory Image">IaaS — Guest VM Memory Image</option>
+            <option value="On-Premises Memory Image">On-Premises — Physical RAM Dump</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="upload_source">Acquisition Source</label>
+          <input type="text" id="upload_source" name="acquisition_source"
+                 placeholder="e.g. AWS EC2 i-0abc123 (us-east-1a)" value="Guest VM Dump">
+        </div>
+        <div class="form-group flex-1">
+          <label for="upload_method">Acquisition Method</label>
+          <input type="text" id="upload_method" name="acquisition_method"
+                 placeholder="e.g. VMware Snapshot / LiME / FTK Imager" value="Hypervisor Snapshot">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="upload_os">Target OS (if known)</label>
+          <input type="text" id="upload_os" name="operating_system"
+                 placeholder="e.g. Windows 10 x64 / Ubuntu 22.04">
+        </div>
+        <div class="form-group flex-1">
+          <label for="upload_acq_dt">Original Acquisition Date/Time (UTC)</label>
+          <input type="datetime-local" id="upload_acq_dt" name="acquisition_datetime">
+          <small class="form-hint">When was the RAM captured? Leave blank if unknown.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="upload_notes">Analyst Notes</label>
+        <textarea id="upload_notes" name="investigator_notes" rows="2"
+          placeholder="Chain-of-custody notes, collection circumstances, incident context..."></textarea>
+      </div>
+
+      <!-- File Drop Zone -->
+      <div class="form-group">
+        <label>Memory Image File <span class="req">*</span></label>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('upload_file').click()">
+          <div class="drop-zone-inner" id="dropZoneInner">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p><strong>Click to select</strong> or drag & drop a memory image</p>
+            <p class="text-muted text-small">Accepts: .raw &nbsp;|&nbsp; .mem &nbsp;|&nbsp; .dmp</p>
+          </div>
+          <input type="file" id="upload_file" name="file"
+                 accept=".raw,.mem,.dmp" style="display:none" required
+                 onchange="handleFileSelect(this)">
+        </div>
+        <!-- File selection info -->
+        <div id="fileInfo" class="file-info-bar" style="display:none;"></div>
+      </div>
+
+      <!-- Upload progress bar (shown during upload) -->
+      <div id="uploadProgressWrap" style="display:none;" class="progress-wrap">
+        <div class="progress-label">
+          <span>Uploading &amp; hashing evidence…</span>
+          <span id="uploadProgressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="uploadProgressBar" style="width:0%"></div>
+        </div>
+        <small class="form-hint">SHA-256 is computed on the server as the file streams in. Please wait.</small>
+      </div>
+
+      <div class="modal-footer" style="padding: 0; margin-top: 16px; border: none; background: none;">
+        <button type="button" class="btn btn-secondary" onclick="closeUploadPanel()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
+          Upload &amp; Hash Evidence
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Evidence Table -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <h2 class="section-title">Staged Memory Evidence Repository</h2>
+        <span class="counter-badge">{{ evidence_list|length }} records</span>
+      </div>
+      <div class="section-tools">
+        <input type="text" id="evidenceSearch" class="search-input-inline"
+               placeholder="Filter by filename, hash, case..." oninput="filterEvidenceTable()">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="cyber-table" id="evidenceTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Case Reference</th>
+            <th>Original Filename</th>
+            <th>File Size</th>
+            <th>SHA-256 Hash</th>
+            <th>Evidence Type</th>
+            <th>Integrity Status</th>
+            <th>Uploaded (UTC)</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="evidenceTableBody">
+          {% if evidence_list %}
+            {% for ev in evidence_list %}
+            <tr class="ev-row"
+                id="ev-row-{{ ev.id }}"
+                data-filename="{{ ev.filename|lower }}"
+                data-hash="{{ ev.sha256_hash|lower }}"
+                data-case="{{ ev.case_number|lower }}">
+              <td class="font-mono text-muted text-small">#{{ ev.id }}</td>
+              <td class="font-mono text-cyan">
+                <a href="/cases/{{ ev.case_id }}" class="case-link">{{ ev.case_number }}</a>
+              </td>
+              <td>
+                <div class="case-title-cell">
+                  <span class="cell-primary">{{ ev.filename }}</span>
+                  <span class="cell-secondary">{{ ev.file_extension }} &bull; {{ ev.human_size }}</span>
+                </div>
+              </td>
+              <td class="font-mono text-small">{{ ev.human_size }}</td>
+              <td>
+                <div class="hash-cell">
+                  <span class="hash-short font-mono" title="{{ ev.sha256_hash }}">
+                    {{ ev.sha256_hash[:16] }}…{{ ev.sha256_hash[-8:] }}
+                  </span>
+                  <button class="btn-icon" title="Copy full SHA-256"
+                          onclick="copyHash('{{ ev.sha256_hash }}', this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+              <td>
+                <span class="badge-env {% if 'IaaS' in ev.evidence_type %}badge-iaas{% else %}badge-onprem{% endif %}">
+                  {{ ev.evidence_type }}
+                </span>
+              </td>
+              <td>
+                <span class="integrity-badge integrity-{{ ev.integrity_status|lower|replace(' ', '-')|replace('—', '') }}"
+                      id="integrity-{{ ev.id }}">
+                  {{ ev.integrity_status }}
+                </span>
+              </td>
+              <td class="text-muted text-small">{{ ev.uploaded_at }}</td>
+              <td class="text-right">
+                <a href="/evidence/{{ ev.id }}" class="btn-icon" title="View Evidence Dossier">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </a>
+                <button class="btn-icon" title="Verify Integrity"
+                        onclick="verifyIntegrity({{ ev.id }}, '{{ ev.filename }}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" title="Remove Record"
+                        onclick="confirmDeleteEvidence({{ ev.id }}, '{{ ev.filename }}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr id="emptyEvidenceRow">
+              <td colspan="9" class="empty-state-cell">
+                <div class="empty-state">
+                  <div class="empty-icon">🧠</div>
+                  <p class="empty-text">No memory images staged yet.</p>
+                  <p class="empty-subtext">
+                    Upload an authorised .raw / .mem / .dmp file to begin forensic analysis.
+                  </p>
+                  <button class="btn btn-primary" onclick="openUploadPanel()">
+                    + Upload First Evidence
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Integrity Verify Modal -->
+  <div id="verifyModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width:580px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </span>
+          <h3 class="modal-title">Integrity Verification Result</h3>
+        </div>
+        <button class="modal-close" onclick="closeVerifyModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="verifyModalBody">
+        <!-- Populated by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeVerifyModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/evidence.js"></script>
+{% endblock %}

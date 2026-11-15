@@ -1,0 +1,108 @@
+{
+  "report_metadata": {
+    "report_number": "REP-P6-EVAL-5B96AC-20261114154919",
+    "project_title": "Automated Cloud-Aware Memory Forensics Using the Volatility Framework for Volatile Evidence Recovery",
+    "report_title": "Forensic Investigation Dossier & Analysis Report",
+    "generated_at": "2026-11-14 15:49:19 UTC",
+    "lead_investigator": "Dr. Forensic Evaluator"
+  },
+  "case_information": {
+    "id": 96,
+    "case_number": "P6-EVAL-5B96AC",
+    "title": "Phase 6 Comprehensive Evaluation Case",
+    "description": "End-to-end verification and testing validation dossier",
+    "investigator": "Dr. Forensic Evaluator",
+    "environment_type": "IaaS (Virtual Machine)",
+    "status": "Open",
+    "priority": "Medium",
+    "created_at": "2026-11-14 15:49:19",
+    "updated_at": "2026-11-14 15:49:19",
+    "evidence_count": 2
+  },
+  "evidence_details": [
+    {
+      "id": 71,
+      "case_id": 96,
+      "filename": "blocked_tamper.raw",
+      "stored_path": "C:\\Users\\nikhi\\AppData\\Local\\Temp\\tmptn2a0uyk.raw",
+      "file_size_bytes": 420,
+      "sha256_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "evidence_type": "IaaS Memory Image",
+      "acquisition_source": "Guest VM Dump",
+      "acquisition_notes": null,
+      "uploaded_at": "2026-11-14 15:49:19",
+      "stored_filename": "tmptn2a0uyk.raw",
+      "file_extension": ".raw",
+      "acquisition_method": "Hypervisor Snapshot",
+      "operating_system": null,
+      "acquisition_datetime": null,
+      "investigator_notes": null,
+      "integrity_status": "Not Verified",
+      "last_verified_at": null,
+      "case_number": "P6-EVAL-5B96AC"
+    },
+    {
+      "id": 70,
+      "case_id": 96,
+      "filename": "tamper_test.raw",
+      "stored_path": "C:\\Users\\nikhi\\AppData\\Local\\Temp\\tmpixf6tyg8.raw",
+      "file_size_bytes": 2450,
+      "sha256_hash": "dc9b6c6b5eddc5af19b1730cc10c8ff07056c9f9b2ae5b2c4ba2a373bebdf867",
+      "evidence_type": "IaaS Memory Image",
+      "acquisition_source": "Guest VM Dump",
+      "acquisition_notes": null,
+      "uploaded_at": "2026-11-14 15:49:19",
+      "stored_filename": "tmpixf6tyg8.raw",
+      "file_extension": ".raw",
+      "acquisition_method": "Hypervisor Snapshot",
+      "operating_system": null,
+      "acquisition_datetime": null,
+      "investigator_notes": null,
+      "integrity_status": "MISMATCH — File May Be Altered",
+      "last_verified_at": "2026-11-14 15:49:19",
+      "case_number": "P6-EVAL-5B96AC"
+    }
+  ],
+  "volatility_analysis": {
+    "session": null,
+    "plugin_runs": [],
+    "total_runs": 0,
+    "total_artefacts": 0
+  },
+  "correlation_summary": {
+    "links": [],
+    "total_links": 0
+  },
+  "suspicious_findings": {
+    "findings": [],
+    "total_findings": 0,
+    "severity_counts": {
+      "High": 0,
+      "Medium": 0,
+      "Low": 0
+    }
+  },
+  "activity_timeline": [],
+  "cloud_evidence_classification": [],
+  "chain_of_custody": [],
+  "conclusion": {
+    "executive_summary": "Automated memory forensic examination of case P6-EVAL-5B96AC identified 0 suspicious indicator(s) (0 High, 0 Medium, 0 Low) across 2 evidence source(s) and 0 Volatility 3 plugin executions.",
+    "observations": [
+      "Evidence integrity verified against SHA-256 cryptographic baselines without alteration.",
+      "Cross-artefact correlation identified 0 verifiable linkage(s) between processes, sockets, and command strings.",
+      "Cloud evidence scoped strictly according to service model boundaries (IaaS guest VM vs SaaS provider host isolation)."
+    ],
+    "limitations": [
+      "Memory forensics reflects volatile artifacts existing in RAM at the exact moment of capture.",
+      "Volatility analysis is bounded by the availability of operating system symbol tables.",
+      "Direct host RAM extraction is architecturally restricted on SaaS multi-tenant environments; SaaS evidence relies on provider-approved compliance exports.",
+      "Heuristic suspicious activity flags represent investigative leads and do not constitute absolute proof of malicious compromise without corroboration."
+    ],
+    "recommendations": [
+      "Isolate affected virtual instances from production VPC networks to prevent lateral pivot.",
+      "Preserve hypervisor snapshot images and export audit logs under strict chain-of-custody protocols.",
+      "Conduct deep binary reverse-engineering on unlinked processes and suspicious PowerShell payloads identified.",
+      "Implement endpoint detection and response (EDR) sensors to augment volatile memory capture workflows."
+    ]
+  }
+}

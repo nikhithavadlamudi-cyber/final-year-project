@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+
+<div class="evidence-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb">
+        <a href="/">Dashboard</a> &gt;
+        <a href="/analysis">Volatility Analysis</a> &gt;
+        <span>Session #{{ session.id }}</span>
+      </div>
+      <h1 class="page-title">Analysis Session #{{ session.id }}</h1>
+      <p class="page-subtitle">
+        Evidence: <strong>{{ session.filename }}</strong> &nbsp;|&nbsp;
+        Case: <strong>{{ session.case_number }}</strong> &nbsp;|&nbsp;
+        Vol3: <strong>v{{ session.volatility_version }}</strong>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="exportSession({{ session.id }})">
+        &#8595; Export JSON
+      </button>
+      <a href="/analysis" class="btn btn-secondary" style="text-decoration:none;">&#8592; Back</a>
+    </div>
+  </div>
+
+  <!-- Session Metadata Card -->
+  <div class="section-card" style="margin-bottom:1.2rem;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.9rem;">
+
+      <div class="meta-item">
+        <div class="meta-label">Status</div>
+        <span class="session-badge {{ session.status|lower }}">{{ session.status }}</span>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Detected OS</div>
+        <div class="meta-value">{{ session.detected_os or 'Not detected' }}</div>
+        <div style="font-size:.75rem;color:var(--text-secondary);">Confidence: {{ session.os_confidence or '—' }}</div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Integrity Check</div>
+        {% if session.integrity_verified %}
+        <span style="color:#10b981;font-weight:600;">&#10003; Verified</span>
+        {% else %}
+        <span style="color:#f87171;font-weight:600;">&#8869; Not Verified</span>
+        {% endif %}
+        {% if session.integrity_hash %}
+        <div style="font-size:.7rem;font-family:monospace;color:var(--text-secondary);word-break:break-all;margin-top:.2rem;">{{ session.integrity_hash[:32] }}…</div>
+        {% endif %}
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Plugin Results</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.3rem;">
+          <span class="count-pill ok">&#10003; {{ session.plugins_ok }} OK</span>
+          <span class="count-pill empty">&#8709; {{ session.plugins_empty }} Empty</span>
+          <span class="count-pill fail">&#10007; {{ session.plugins_failed }} Failed</span>
+        </div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Started</div>
+        <div class="meta-value">{{ session.started_at }}</div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Completed</div>
+        <div class="meta-value">{{ session.completed_at or 'Still running…' }}</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabbed Plugin Results -->
+  <div class="section-card">
+    <div class="section-header" style="margin-bottom:.8rem;">
+      <h2 class="section-title">Plugin Results</h2>
+      <span style="font-size:.8rem;color:var(--text-secondary);">{{ runs|length }} plugins executed</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="result-tabs">
+      {% set unique_cats = [] %}
+      {% for run in runs %}
+        {% if run.category not in unique_cats %}
+          {% if unique_cats.append(run.category) %}{% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% for cat in unique_cats %}
+      <button class="result-tab-btn" data-tab="{{ cat|replace(' ','_') }}"
+              onclick="switchResultTab('{{ cat|replace(' ','_') }}')">
+        {{ cat }}
+        <span style="font-size:.7rem;opacity:.7;">({{ categories[cat]|length }})</span>
+      </button>
+      {% endfor %}
+
+      <!-- Always add an "All Plugins" tab -->
+      <button class="result-tab-btn" data-tab="all_plugins"
+              onclick="switchResultTab('all_plugins')">
+        All Plugins
+      </button>
+    </div>
+
+    <!-- Per-category tab panels -->
+    {% for cat in unique_cats %}
+    <div class="result-tab-panel" data-tab="{{ cat|replace(' ','_') }}">
+      <input class="tab-search" type="text" placeholder="Search {{ cat }} results…"
+             oninput="filterTable(this, 'table-{{ cat|replace(' ','_') }}')">
+
+      {% for run in categories[cat] %}
+      <div style="margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem;">
+          <code style="font-size:.82rem;">{{ run.plugin_name }}</code>
+          <span class="run-status-pill {{ run.status|lower }}">{{ run.status }}</span>
+          <span class="os-badge {{ run.os_family or 'any' }}" style="font-size:.65rem;">{{ run.os_family or 'any' }}</span>
+          <span style="font-size:.75rem;color:var(--text-secondary);margin-left:auto;">
+            {{ run.row_count }} row{% if run.row_count != 1 %}s{% endif %} &bull;
+            {{ '%.2f'|format(run.execution_time_sec or 0) }}s
+          </span>
+        </div>
+
+        {% if run.error_message %}
+        <div class="infobox" style="background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:#f87171;font-size:.8rem;padding:.6rem .9rem;margin-bottom:.5rem;">
+          <strong>Error:</strong> {{ run.error_message[:400] }}
+        </div>
+        {% endif %}
+
+        {% if run.parsed_rows %}
+        <div style="overflow-x:auto;border:1px solid var(--border-color,#2a3045);border-radius:6px;">
+          <table class="parsed-table" id="table-{{ cat|replace(' ','_') }}-{{ run.id }}">
+            <thead>
+              <tr>
+                {% for col in run.parsed_rows[0].keys() %}
+                <th>{{ col }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in run.parsed_rows %}
+              <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% elif run.status == 'Success' %}
+        <div style="font-size:.82rem;color:var(--text-secondary);padding:.5rem 0;">
+          Plugin succeeded but returned no rows.
+        </div>
+        {% elif run.status == 'Empty' %}
+        <div style="font-size:.82rem;color:var(--text-secondary);padding:.5rem 0;">
+          No artefacts found (memory may not contain this data).
+        </div>
+        {% elif run.status == 'Unsupported' %}
+        <div style="font-size:.82rem;color:#f59e0b;padding:.5rem 0;">
+          Plugin unsupported for this OS or image format.
+        </div>
+        {% endif %}
+
+        {% if run.raw_output %}
+        <button class="raw-output-toggle" id="raw-btn-{{ run.id }}"
+                onclick="toggleRawOutput({{ run.id }})">▼ Show raw output</button>
+        <pre class="raw-output-pre" id="raw-{{ run.id }}">{{ run.raw_output[:8000] }}{% if run.raw_output|length > 8000 %}
+… [truncated — download JSON export for full output]{% endif %}</pre>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- All Plugins tab -->
+    <div class="result-tab-panel" data-tab="all_plugins">
+      <input class="tab-search" type="text" placeholder="Search all plugins…"
+             oninput="filterTable(this, 'all-plugins-table')">
+      <div style="overflow-x:auto;border:1px solid var(--border-color,#2a3045);border-radius:6px;">
+        <table class="sessions-table" id="all-plugins-table">
+          <thead>
+            <tr>
+              <th>Plugin</th>
+              <th>Category</th>
+              <th>OS</th>
+              <th>Status</th>
+              <th>Rows</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for run in runs %}
+            <tr>
+              <td><code style="font-size:.8rem;">{{ run.plugin_name }}</code></td>
+              <td><span class="cat-badge">{{ run.category or '—' }}</span></td>
+              <td><span class="os-badge {{ run.os_family or 'any' }}">{{ run.os_family or 'any' }}</span></td>
+              <td><span class="run-status-pill {{ run.status|lower }}">{{ run.status }}</span></td>
+              <td>{{ run.row_count }}</td>
+              <td style="font-size:.78rem;color:var(--text-secondary);">{{ '%.2f'|format(run.execution_time_sec or 0) }}s</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- .section-card -->
+
+  {% if not runs %}
+  <div class="section-card">
+    <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+      {% if session.status == 'Running' %}
+      <div class="analysis-spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 1rem;"></div>
+      <p>Analysis is running. This page will auto-refresh in a few seconds.</p>
+      <script>setTimeout(()=>location.reload(), 4000);</script>
+      {% elif session.status == 'Failed' %}
+      <p style="color:#f87171;">Analysis failed. Check the session metadata above for details.</p>
+      {% else %}
+      <p>No plugin runs recorded for this session.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- .evidence-page -->
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analysis.js"></script>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Top Dashboard Header -->
+    <div class="page-header">
+        <div class="header-titles">
+            <h1 class="page-title">Forensic Operations Center</h1>
+            <p class="page-subtitle">Automated Cloud-Aware Memory Forensics Using Volatility 3 Framework</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="refreshDashboardStats()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Sync Status
+            </button>
+            <button class="btn btn-primary" onclick="openNewCaseModal()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Forensic Case
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Metric Cards (8 Live SQLite Metrics) -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon-wrap cyan">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Forensic Cases</span>
+                <span class="stat-value" id="statTotalCases">{{ stats.total_cases }}</span>
+            </div>
+            <div class="stat-badge info">Active: {{ stats.active_cases }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Memory Evidence</span>
+                <span class="stat-value" id="statTotalEvidence">{{ stats.total_evidence }}</span>
+            </div>
+            <div class="stat-badge success">Verified: {{ stats.verified_evidence or 0 }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Volatility Plugin Runs</span>
+                <span class="stat-value" id="statPluginRuns">{{ stats.total_plugin_runs }}</span>
+            </div>
+            <div class="stat-badge {% if vol_status.installed %}success{% else %}danger{% endif %}">
+                {{ vol_status.version or 'v2.28+' }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap emerald">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Extracted Artefacts</span>
+                <span class="stat-value" id="statTotalArtefacts">{{ stats.total_artefacts or 0 }}</span>
+            </div>
+            <div class="stat-badge info">Normalised</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap red">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Suspicious Findings</span>
+                <span class="stat-value text-amber" id="statFindings">{{ stats.total_findings }}</span>
+            </div>
+            <div class="stat-badge warning">Correlated</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap cyan">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">IaaS Guest RAM</span>
+                <span class="stat-value" id="statIaasRecords">{{ stats.iaas_records or 0 }}</span>
+            </div>
+            <div class="stat-badge info">VM Evidence</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">SaaS Audit Logs</span>
+                <span class="stat-value" id="statSaasRecords">{{ stats.saas_records or 0 }}</span>
+            </div>
+            <div class="stat-badge warning">Log/Export</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon-wrap emerald">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Forensic Reports</span>
+                <span class="stat-value" id="statReports">{{ stats.total_reports or 0 }}</span>
+            </div>
+            <div class="stat-badge success">PDF & JSON</div>
+        </div>
+    </div>
+
+    <!-- Cloud Forensics Awareness Banner -->
+    <div class="cloud-awareness-card">
+        <div class="cloud-card-header">
+            <div class="cloud-card-title">
+                <span class="badge-tag">METHODOLOGY NOTICE</span>
+                Cloud-Aware Memory Extraction & Volatile Evidence Boundary
+            </div>
+            <span class="pill-iaas-saas">IaaS vs. SaaS Distinction</span>
+        </div>
+        <div class="cloud-card-grid">
+            <div class="cloud-card-col">
+                <div class="col-heading iaas-heading">
+                    <span class="dot iaas-dot"></span>
+                    <strong>Infrastructure as a Service (IaaS)</strong>
+                </div>
+                <p class="col-text">
+                    Analyzes authorized volatile memory snapshots (RAW, MEM, DMP) captured from Guest Virtual Machines (e.g., AWS EC2, Azure VM, GCP Compute Engine). Evidence integrity is strictly preserved via SHA-256 verification.
+                </p>
+            </div>
+            <div class="cloud-card-col">
+                <div class="col-heading saas-heading">
+                    <span class="dot saas-dot"></span>
+                    <strong>Software as a Service (SaaS) Boundary</strong>
+                </div>
+                <p class="col-text">
+                    Direct physical host RAM access is strictly isolated by cloud service providers. SaaS forensics relies on API audit logs, tenant exports, and provider-assisted evidence rather than direct hypervisor memory acquisition.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Cases Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">Recent Investigation Cases</h2>
+                <span class="counter-badge">{{ recent_cases|length }} total</span>
+            </div>
+            <div class="section-tools">
+                <a href="/cases" class="btn btn-sm btn-secondary">View All Cases &rarr;</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="cyber-table">
+                <thead>
+                    <tr>
+                        <th>Case Reference</th>
+                        <th>Investigation Title</th>
+                        <th>Lead Investigator</th>
+                        <th>Target Scope</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="casesTableBody">
+                    {% if recent_cases %}
+                        {% for case in recent_cases %}
+                        <tr id="case-row-{{ case.id }}">
+                            <td class="font-mono text-cyan">
+                                <a href="/cases/{{ case.id }}" class="case-link">{{ case.case_number }}</a>
+                            </td>
+                            <td>
+                                <div class="case-title-cell">
+                                    <span class="cell-primary">{{ case.title }}</span>
+                                    {% if case.description %}
+                                    <span class="cell-secondary">{{ case.description[:60] }}...</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>{{ case.investigator }}</td>
+                            <td>
+                                <span class="badge-env {% if 'IaaS' in case.environment_type %}badge-iaas{% elif 'SaaS' in case.environment_type %}badge-saas{% else %}badge-onprem{% endif %}">
+                                    {{ case.environment_type.split(' ')[0] }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-prio badge-{{ case.priority|lower }}">
+                                    {{ case.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-{{ case.status|lower|replace(' ', '-') }}">
+                                    {{ case.status }}
+                                </span>
+                            </td>
+                            <td class="text-muted text-small">{{ case.created_at[:16] }}</td>
+                            <td class="text-right">
+                                <a href="/cases/{{ case.id }}" class="btn-icon" title="View Case Dossier">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </a>
+                                <button onclick="confirmDeleteCase({{ case.id }}, '{{ case.case_number }}')" class="btn-icon danger" title="Delete Case">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr id="emptyCasesRow">
+                            <td colspan="8" class="empty-state-cell">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📁</div>
+                                    <p class="empty-text">No forensic cases recorded yet.</p>
+                                    <p class="empty-subtext">Initialize your first investigation to begin analyzing memory dumps.</p>
+                                    <button class="btn btn-primary" onclick="openNewCaseModal()">+ Create Initial Case</button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Diagnostic and System Specifications Grid -->
+    <div class="system-grid">
+        <div class="system-card">
+            <h3 class="system-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                </svg>
+                Engine Environment Diagnostics
+            </h3>
+            <ul class="diag-list">
+                <li>
+                    <span class="diag-key">Backend Host</span>
+                    <span class="diag-val">{{ os_info }}</span>
+                </li>
+                <li>
+                    <span class="diag-key">Python Interpreter</span>
+                    <span class="diag-val">Python {{ python_version }}</span>
+                </li>
+                <li>
+                    <span class="diag-key">Volatility 3 Framework</span>
+                    <span class="diag-val text-emerald">Installed ({{ vol_status.version or '2.28+' }})</span>
+                </li>
+                <li>
+                    <span class="diag-key">Forensic Database</span>
+                    <span class="diag-val">SQLite (WAL & Foreign Keys Enabled)</span>
+                </li>
+                <li>
+                    <span class="diag-key">Evidence Staging Storage</span>
+                    <span class="diag-val">{{ disk_info.free_gb }} GB free / {{ disk_info.total_gb }} GB</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="system-card">
+            <h3 class="system-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Six-Phase Academic Road-Map
+            </h3>
+            <div class="phase-stepper">
+                <div class="phase-step completed">
+                    <span class="step-num">1</span>
+                    <div class="step-info">
+                        <strong>Phase 1: Project Foundation & Dashboard</strong>
+                        <span>Operational (FastAPI, SQLite, Operations Dashboard, Case CRUD)</span>
+                    </div>
+                </div>
+                <div class="phase-step completed">
+                    <span class="step-num">2</span>
+                    <div class="step-info">
+                        <strong>Phase 2: Memory Ingestion & SHA-256</strong>
+                        <span>Operational (Streaming Hash, Tamper Detection, Safe Storage)</span>
+                    </div>
+                </div>
+                <div class="phase-step completed">
+                    <span class="step-num">3</span>
+                    <div class="step-info">
+                        <strong>Phase 3: Volatility 3 Analysis</strong>
+                        <span>Operational (PsList, NetScan, LdrModules, CmdLine Automation)</span>
+                    </div>
+                </div>
+                <div class="phase-step completed">
+                    <span class="step-num">4</span>
+                    <div class="step-info">
+                        <strong>Phase 4: Correlation & Timeline</strong>
+                        <span>Operational (Heuristic Scoring, Shell Spawning, Threat Correlation)</span>
+                    </div>
+                </div>
+                <div class="phase-step completed">
+                    <span class="step-num">5</span>
+                    <div class="step-info">
+                        <strong>Phase 5: Cloud Awareness & Reports</strong>
+                        <span>Operational (IaaS/SaaS Provenance, Custody Ledger, PDF/JSON Export)</span>
+                    </div>
+                </div>
+                <div class="phase-step completed">
+                    <span class="step-num">6</span>
+                    <div class="step-info">
+                        <strong>Phase 6: Testing, Evaluation & Demo</strong>
+                        <span>Operational (Empirical Benchmarks, 7 Experiments, Defense Ready)</span>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="/evaluation" class="btn btn-sm btn-primary" style="width: 100%; justify-content: center;">
+                    View Evaluation & Benchmark Center &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cases.js"></script>
+{% endblock %}

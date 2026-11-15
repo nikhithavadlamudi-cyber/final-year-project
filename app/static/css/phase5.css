@@ -1,0 +1,231 @@
+/*
+  Phase 5 — Cloud Evidence Management & Forensic Reporting Styles
+  ==================================================================
+  Extends style.css, phase2.css, phase3.css, phase4.css. Cyber dark theme.
+*/
+
+/* ── Service Model Badges ──────────────────────────────────────────── */
+.service-model-badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.service-model-badge.iaas {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
+.service-model-badge.saas {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+/* ── Simulated vs Actual Badge ─────────────────────────────────────── */
+.simulated-badge {
+    display: inline-block;
+    padding: 0.18rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.actual-badge {
+    display: inline-block;
+    padding: 0.18rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* ── Cloud Boundary Limitation Notice ──────────────────────────────── */
+.saas-ram-notice {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-left: 4px solid #ef4444;
+    border-radius: 6px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.25rem;
+    color: #fca5a5;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.saas-ram-notice strong {
+    color: #f87171;
+    display: block;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+}
+
+.iaas-boundary-notice {
+    background: rgba(6, 182, 212, 0.08);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    border-left: 4px solid #06b6d4;
+    border-radius: 6px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 1.25rem;
+    color: #a5f3fc;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.iaas-boundary-notice strong {
+    color: #38bdf8;
+    display: block;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+}
+
+/* ── Chain of Custody Ledger ───────────────────────────────────────── */
+.custody-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.custody-node {
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.custody-action {
+    font-weight: 600;
+    color: var(--text-primary, #f1f5f9);
+    font-size: 0.85rem;
+}
+
+.custody-meta {
+    font-size: 0.78rem;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.custody-hash {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.08);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+}
+
+/* ── Reports Hub Cards ─────────────────────────────────────────────── */
+.report-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.report-card {
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.report-card:hover {
+    border-color: #6366f1;
+    transform: translateY(-2px);
+}
+
+.report-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.6rem;
+}
+
+.report-num {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #818cf8;
+    font-weight: 700;
+}
+
+.report-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary, #f1f5f9);
+    margin: 0.3rem 0;
+}
+
+.report-meta-row {
+    font-size: 0.78rem;
+    color: var(--text-secondary, #94a3b8);
+    margin-bottom: 0.4rem;
+}
+
+.report-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color, #2a3045);
+    padding-top: 0.75rem;
+}
+
+.btn-pdf {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-pdf:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.btn-json {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-json:hover {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+}

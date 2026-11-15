@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/phase2.css">
+    <link rel="stylesheet" href="/static/css/phase3.css">
+    <link rel="stylesheet" href="/static/css/phase4.css">
+    <link rel="stylesheet" href="/static/css/phase5.css">
+</head>
+
+<body class="cyber-theme">
+    <!-- Top Bar -->
+    <header class="top-nav">
+        <div class="brand">
+            <span class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+            </span>
+            <div class="brand-text">
+                <span class="brand-title">CLOUD-FORENSICS</span>
+                <span class="brand-subtitle">Volatility 3 Memory Platform</span>
+            </div>
+        </div>
+
+        <div class="top-meta">
+            <div class="status-pill operational">
+                <span class="pulse-dot"></span>
+                <span>VOLATILITY 3: <strong>ACTIVE</strong></span>
+            </div>
+            <div class="status-pill env-badge">
+                <span>ACADEMIC CSE CYBERSECURITY</span>
+            </div>
+            <a href="/docs" target="_blank" class="nav-btn ghost-btn" title="View Swagger OpenAPI Documentation">
+                API Docs
+            </a>
+            <button class="nav-btn primary-btn" onclick="openNewCaseModal()">
+                + New Case
+            </button>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="nav-section-title">FORENSIC PIPELINE</div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link {% if active_tab == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </span>
+                    <span class="nav-label">1. Dashboard & Cases</span>
+                    <span class="badge-active">Active</span>
+                </a>
+
+                <a href="/cases" class="nav-link {% if active_tab == 'cases' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Case Manager</span>
+                </a>
+
+                <a href="/evidence" class="nav-link {% if active_tab == 'evidence' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Memory Evidence</span>
+                    <span class="badge-active">Phase 2</span>
+                </a>
+
+                <a href="/evidence"
+                    class="nav-link {% if active_tab == 'module_2' or active_tab == 'evidence' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">2. Memory Upload & Hash</span>
+                    <span class="badge-active">Active</span>
+                </a>
+
+                <a href="/analysis" class="nav-link {% if active_tab == 'analysis' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                            <line x1="9" y1="1" x2="9" y2="4"></line>
+                            <line x1="15" y1="1" x2="15" y2="4"></line>
+                            <line x1="9" y1="20" x2="9" y2="23"></line>
+                            <line x1="15" y1="20" x2="15" y2="23"></line>
+                            <line x1="20" y1="9" x2="23" y2="9"></line>
+                            <line x1="20" y1="14" x2="23" y2="14"></line>
+                            <line x1="1" y1="9" x2="4" y2="9"></line>
+                            <line x1="1" y1="14" x2="4" y2="14"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">3. Volatility 3 Analysis</span>
+                    <span class="badge-active">Phase 3</span>
+                </a>
+
+                <a href="/correlation" class="nav-link {% if active_tab == 'correlation' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="18" cy="18" r="3"></circle>
+                            <circle cx="6" cy="6" r="3"></circle>
+                            <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+                            <line x1="6" y1="9" x2="6" y2="21"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">4. Artifact Correlation</span>
+                    <span class="badge-active">Phase 4</span>
+                </a>
+
+                <a href="/cloud-evidence" class="nav-link {% if active_tab == 'cloud_evidence' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-label">5. Cloud Evidence</span>
+                    <span class="badge-active">Phase 5</span>
+                </a>
+
+                <a href="/reports" class="nav-link {% if active_tab == 'reports' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Forensic Reports</span>
+                    <span class="badge-active">Phase 5</span>
+                </a>
+
+                <a href="/evaluation" class="nav-link {% if active_tab == 'evaluation' or active_tab == 'module_6' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-label">6. Evaluation & Demo</span>
+                    <span class="badge-active">Phase 6</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-card">
+                    <div class="footer-title">Cloud Awareness Boundary</div>
+                    <p class="footer-desc">
+                        IaaS: Guest VM RAM is acquired via hypervisor snapshots.<br>
+                        SaaS: Host RAM is isolated by provider; logs/exports used instead.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modal: Create New Case -->
+    <div id="newCaseModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <line x1="12" y1="11" x2="12" y2="17"></line>
+                            <line x1="9" y1="14" x2="15" y2="14"></line>
+                        </svg>
+                    </span>
+                    <h3 class="modal-title">Create Forensic Case</h3>
+                </div>
+                <button class="modal-close" onclick="closeNewCaseModal()">&times;</button>
+            </div>
+
+            <form id="newCaseForm" onsubmit="handleCreateCaseSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="case_number">Case Reference Number <span class="req">*</span></label>
+                            <input type="text" id="case_number" name="case_number" placeholder="e.g., CASE-2026-001"
+                                required>
+                            <small class="form-hint">Must be unique across all investigations.</small>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="investigator">Lead Investigator <span class="req">*</span></label>
+                            <input type="text" id="investigator" name="investigator"
+                                placeholder="e.g., Nikhil (Analyst)" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">Investigation Title <span class="req">*</span></label>
+                        <input type="text" id="title" name="title"
+                            placeholder="e.g., Suspicious CobaltStrike Beacon on AWS EC2 Guest" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="environment_type">Target Environment Scope <span class="req">*</span></label>
+                            <select id="environment_type" name="environment_type" required>
+                                <option value="IaaS (Virtual Machine)">IaaS (AWS EC2 / Azure VM / GCP Instance)</option>
+                                <option value="SaaS (Cloud Service Audit)">SaaS (Cloud Service Audit / Admin Logs)
+                                </option>
+                                <option value="On-Premises / Physical">On-Premises / Physical Workstation</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="priority">Investigation Priority <span class="req">*</span></label>
+                            <select id="priority" name="priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Scope & Incident Synopsis</label>
+                        <textarea id="description" name="description" rows="3"
+                            placeholder="Briefly detail the incident indicator, affected host IP, or triage trigger..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewCaseModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createCaseBtn">Initialize Case</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

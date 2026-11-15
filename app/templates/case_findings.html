@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+<link rel="stylesheet" href="/static/css/phase4.css">
+
+<div class="evidence-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb">
+        <a href="/">Dashboard</a> &gt;
+        <a href="/cases">Cases</a> &gt;
+        <a href="/cases/{{ case.id }}">{{ case.case_number }}</a> &gt;
+        <span>Findings</span>
+      </div>
+      <h1 class="page-title">Case Findings &mdash; {{ case.case_number }}</h1>
+      <p class="page-subtitle">{{ case.title }} &bull; Investigator: <strong>{{ case.investigator }}</strong></p>
+    </div>
+    <div class="header-actions">
+      <a href="/cases/{{ case.id }}" class="btn btn-secondary" style="text-decoration:none;">&#8592; Case Details</a>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title">Aggregated Case Findings ({{ findings|length }})</h2>
+    </div>
+
+    {% if findings %}
+    <div style="overflow-x:auto;">
+      <table class="parsed-table">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Category</th>
+            <th>Finding Title</th>
+            <th>Description &amp; Flag Reason</th>
+            <th>Review Status</th>
+            <th>Analyst Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings %}
+          <tr>
+            <td><span class="severity-badge {{ f.severity|lower }}">{{ f.severity }}</span></td>
+            <td><span class="cat-badge">{{ f.category }}</span></td>
+            <td><strong>{{ f.title }}</strong></td>
+            <td style="font-size:0.8rem;max-width:320px;">
+              <div>{{ f.description }}</div>
+              <div style="color:var(--text-secondary);font-style:italic;margin-top:0.2rem;">{{ f.flag_reason }}</div>
+            </td>
+            <td><span class="review-badge {{ f.review_status|lower|replace(' ', '-') }}">{{ f.review_status }}</span></td>
+            <td style="font-size:0.8rem;color:var(--text-secondary);">
+              {{ f.analyst_notes or '—' }}
+              {% if f.reviewed_by %}<br><small>By: {{ f.reviewed_by }}</small>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+      No findings recorded for this case yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

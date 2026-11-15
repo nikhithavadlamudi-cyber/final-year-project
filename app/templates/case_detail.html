@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="case-detail-container">
+    <!-- Breadcrumb & Header -->
+    <div class="page-header">
+        <div class="header-titles">
+            <div class="breadcrumb">
+                <a href="/">Dashboard</a> &gt; <a href="/cases">Cases</a> &gt; <span>{{ case.case_number }}</span>
+            </div>
+            <div class="dossier-title-row">
+                <span class="dossier-id font-mono">{{ case.case_number }}</span>
+                <h1 class="page-title">{{ case.title }}</h1>
+            </div>
+            <p class="page-subtitle">Investigation Lead: <strong>{{ case.investigator }}</strong> | Scope: <span class="text-cyan">{{ case.environment_type }}</span></p>
+        </div>
+        <div class="header-actions">
+            <button onclick="openEditCaseModal({{ case.id }})" class="btn btn-secondary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Details
+            </button>
+            <button onclick="confirmDeleteCase({{ case.id }}, '{{ case.case_number }}')" class="btn btn-danger">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Purge Case
+            </button>
+        </div>
+    </div>
+
+    <!-- Metadata Dossier Card -->
+    <div class="dossier-card">
+        <div class="dossier-grid">
+            <div class="dossier-item">
+                <span class="dossier-label">Case Status</span>
+                <span class="badge-status badge-{{ case.status|lower|replace(' ', '-') }}">{{ case.status }}</span>
+            </div>
+            <div class="dossier-item">
+                <span class="dossier-label">Incident Priority</span>
+                <span class="badge-prio badge-{{ case.priority|lower }}">{{ case.priority }}</span>
+            </div>
+            <div class="dossier-item">
+                <span class="dossier-label">Target Architecture</span>
+                <span class="dossier-value">{{ case.environment_type }}</span>
+            </div>
+            <div class="dossier-item">
+                <span class="dossier-label">Initialized At</span>
+                <span class="dossier-value text-small">{{ case.created_at }}</span>
+            </div>
+            <div class="dossier-item">
+                <span class="dossier-label">Last Modified</span>
+                <span class="dossier-value text-small">{{ case.updated_at }}</span>
+            </div>
+            <div class="dossier-item">
+                <span class="dossier-label">Staged Evidence Dumps</span>
+                <span class="dossier-value font-mono text-cyan">{{ case.evidence_count or 0 }}</span>
+            </div>
+        </div>
+
+        {% if case.description %}
+        <div class="dossier-desc-block">
+            <span class="dossier-label">Incident Synopsis & Context</span>
+            <p class="dossier-desc-text">{{ case.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pipeline Stage Sections -->
+    <div class="pipeline-sections">
+        <!-- Module 2 Evidence Preview Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <span class="module-chip">Phase 2</span>
+                    <h3 class="section-title">Volatile Memory Evidence Dumps</h3>
+                </div>
+                <a href="/modules/2" class="btn btn-sm btn-secondary">Upload Memory Dump &rarr;</a>
+            </div>
+            <div class="empty-state-card">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <h4>No Memory Images Staged For This Case</h4>
+                <p>Module 2 will enable uploading authorized RAW, MEM, or DMP guest VM memory images and verifying cryptographic SHA-256 hashes.</p>
+            </div>
+        </div>
+
+        <!-- Module 3 Volatility Preview Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <span class="module-chip">Phase 3</span>
+                    <h3 class="section-title">Volatility 3 Automated Analysis</h3>
+                </div>
+                <a href="/modules/3" class="btn btn-sm btn-secondary">Analysis Engine &rarr;</a>
+            </div>
+            <div class="empty-state-card">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                </svg>
+                <h4>Awaiting Evidence Ingestion</h4>
+                <p>Once memory images are staged in Phase 2, Volatility 3 plugins (pslist, pstree, netscan, cmdline, modules) will execute automatically here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Case (Reused) -->
+<div id="editCaseModal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title-wrap">
+                <span class="modal-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </span>
+                <h3 class="modal-title">Edit Case Dossier</h3>
+            </div>
+            <button class="modal-close" onclick="closeEditCaseModal()">&times;</button>
+        </div>
+
+        <form id="editCaseForm" onsubmit="handleEditCaseSubmit(event)">
+            <input type="hidden" id="edit_case_id" name="case_id" value="{{ case.id }}">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="edit_case_number">Case Reference</label>
+                        <input type="text" id="edit_case_number" value="{{ case.case_number }}" readonly disabled class="input-disabled">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="edit_investigator">Lead Investigator <span class="req">*</span></label>
+                        <input type="text" id="edit_investigator" name="investigator" value="{{ case.investigator }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_title">Investigation Title <span class="req">*</span></label>
+                    <input type="text" id="edit_title" name="title" value="{{ case.title }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="edit_environment_type">Target Scope <span class="req">*</span></label>
+                        <select id="edit_environment_type" name="environment_type" required>
+                            <option value="IaaS (Virtual Machine)" {% if case.environment_type == 'IaaS (Virtual Machine)' %}selected{% endif %}>IaaS (Virtual Machine)</option>
+                            <option value="SaaS (Cloud Service Audit)" {% if case.environment_type == 'SaaS (Cloud Service Audit)' %}selected{% endif %}>SaaS (Cloud Service Audit)</option>
+                            <option value="On-Premises / Physical" {% if case.environment_type == 'On-Premises / Physical' %}selected{% endif %}>On-Premises / Physical</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="edit_status">Status <span class="req">*</span></label>
+                        <select id="edit_status" name="status" required>
+                            <option value="Open" {% if case.status == 'Open' %}selected{% endif %}>Open</option>
+                            <option value="In Progress" {% if case.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Closed" {% if case.status == 'Closed' %}selected{% endif %}>Closed</option>
+                            <option value="Archived" {% if case.status == 'Archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="edit_priority">Priority <span class="req">*</span></label>
+                        <select id="edit_priority" name="priority" required>
+                            <option value="Low" {% if case.priority == 'Low' %}selected{% endif %}>Low</option>
+                            <option value="Medium" {% if case.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="High" {% if case.priority == 'High' %}selected{% endif %}>High</option>
+                            <option value="Critical" {% if case.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_description">Scope & Synopsis</label>
+                    <textarea id="edit_description" name="description" rows="3">{{ case.description or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditCaseModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="updateCaseBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cases.js"></script>
+{% endblock %}

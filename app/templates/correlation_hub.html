@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+<link rel="stylesheet" href="/static/css/phase4.css">
+
+<div class="evidence-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb"><a href="/">Dashboard</a> &gt; <span>Artifact Correlation</span></div>
+      <h1 class="page-title">Evidence Analysis &amp; Correlation Hub</h1>
+      <p class="page-subtitle">
+        Normalise Volatility 3 output records, correlate multi-dimensional artefacts (Process, Network, CLI, Modules),
+        detect suspicious activity patterns, and reconstruct authentic incident timelines.
+      </p>
+    </div>
+  </div>
+
+  <!-- Notice -->
+  <div class="infobox" style="margin-bottom: 1.5rem;">
+    <strong>Forensic Integrity &amp; Correlation Methodology:</strong>
+    Relationships are computed strictly based on verifiable evidence fields (e.g. PID/PPID matching and genuine timestamps).
+    Suspicious findings are heuristic indicators flagged for manual analyst review, with full traceability back to the source plugin and raw evidence image.
+  </div>
+
+  <!-- Sessions Table Card -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="module-chip">Phase 4</span>
+        <h2 class="section-title">Select an Analysis Session to Correlate</h2>
+      </div>
+      <span style="font-size:0.82rem;color:var(--text-secondary);">{{ sessions|length }} sessions available</span>
+    </div>
+
+    {% if sessions %}
+    <div style="overflow-x:auto;">
+      <table class="sessions-table">
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th>Case Reference</th>
+            <th>Evidence Memory File</th>
+            <th>Detected OS</th>
+            <th>Volatility Status</th>
+            <th>Started</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td><strong>#{{ s.id }}</strong></td>
+            <td><code>{{ s.case_number }}</code> &mdash; {{ s.case_title }}</td>
+            <td><code>{{ s.filename }}</code></td>
+            <td>{{ s.detected_os or 'Unknown' }}</td>
+            <td><span class="session-badge {{ s.status|lower }}">{{ s.status }}</span></td>
+            <td style="font-size:0.8rem;color:var(--text-secondary);">{{ s.started_at }}</td>
+            <td>
+              <a href="/correlation/{{ s.id }}" class="btn btn-sm btn-primary" style="text-decoration:none;">
+                Inspect &amp; Correlate &rarr;
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2.5rem;text-align:center;color:var(--text-secondary);">
+      <p>No analysis sessions recorded yet.</p>
+      <p style="font-size:0.85rem;margin-top:0.5rem;">
+        Run a Volatility 3 analysis in <a href="/analysis">Phase 3</a> first to extract memory artefacts.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

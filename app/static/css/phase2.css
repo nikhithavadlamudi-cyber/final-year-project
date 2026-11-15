@@ -1,0 +1,256 @@
+
+/* ====================================================================
+   Phase 2 — Memory Evidence CSS additions
+   Appended to style.css
+   ==================================================================== */
+
+/* Upload Panel */
+.upload-panel {
+    border: 1px solid var(--border-strong);
+    background: linear-gradient(135deg, var(--bg-card), #131c28);
+}
+
+/* Info / notice boxes */
+.infobox {
+    background: rgba(56, 189, 248, 0.07);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-left: 3px solid var(--cyan);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.infobox-warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.4);
+    border-left-color: var(--amber);
+    color: #fcd34d;
+    margin-top: 14px;
+}
+
+/* Drop Zone */
+.drop-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(10, 14, 20, 0.5);
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--cyan);
+    background: var(--cyan-glow);
+}
+
+.drop-zone-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+/* File info bar */
+.file-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--emerald-glow);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.84rem;
+    margin-top: 8px;
+}
+
+.file-info-name { color: #fff; font-weight: 600; }
+.file-info-size { color: var(--text-muted); }
+.file-info-ext  { font-family: var(--font-mono); color: var(--cyan); }
+
+/* Progress bar */
+.progress-wrap {
+    margin-top: 14px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.progress-track {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0284c7, #38bdf8);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+/* SHA-256 Hash cell in table */
+.hash-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hash-short {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Integrity Status Badge */
+.integrity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 4px;
+}
+
+.integrity-not-verified {
+    background: rgba(100, 116, 139, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.integrity-verified {
+    background: var(--emerald-glow);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.integrity-mismatch-file-may-be-altered,
+[class*="integrity-mismatch"] {
+    background: var(--rose-glow);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    animation: flashRed 0.5s ease 2;
+}
+
+@keyframes flashRed {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Search input inline */
+.search-input-inline {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-strong);
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.84rem;
+    outline: none;
+    min-width: 240px;
+}
+
+/* Verify Result Modal styles */
+.verify-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+}
+
+.verify-result.verify-ok {
+    background: var(--emerald-glow);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.verify-result.verify-fail {
+    background: var(--rose-glow);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.verify-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.verify-status {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.verify-detail-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.verify-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    background: rgba(10, 14, 20, 0.5);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+}
+
+.verify-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.verify-val {
+    font-size: 0.84rem;
+    color: #fff;
+    word-break: break-all;
+}
+
+.hash-wrap { word-break: break-all; font-size: 0.75rem; }
+
+/* Hash block in evidence detail */
+.hash-block {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.hash-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.hash-full {
+    font-size: 0.82rem;
+    word-break: break-all;
+    color: var(--cyan);
+    background: rgba(56, 189, 248, 0.05);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+}
+
+/* Evidence detail container */
+.evidence-detail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

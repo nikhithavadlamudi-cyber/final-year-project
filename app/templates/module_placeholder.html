@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="module-placeholder-container">
+    <div class="page-header">
+        <div class="header-titles">
+            <div class="breadcrumb">
+                <a href="/">Dashboard</a> &gt; <span>Module {{ module.number }}</span>
+            </div>
+            <div class="module-title-badge-row">
+                <h1 class="page-title">{{ module.title }}</h1>
+                <span class="module-phase-badge">{{ module.badge }}</span>
+            </div>
+            <p class="page-subtitle">{{ module.summary }}</p>
+        </div>
+    </div>
+
+    <!-- Architectural Scope Card -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">Module Architectural Scope & Deliverables</h3>
+        </div>
+        <div class="module-requirements-list">
+            {% for req in module.requirements %}
+            <div class="req-item">
+                <span class="req-check-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 14 14"></polyline>
+                    </svg>
+                </span>
+                <span class="req-text">{{ req }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Academic Methodology Card -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">Academic & Engineering Methodology</h3>
+        </div>
+        <div class="academic-note-content">
+            <p>
+                In strict accordance with the project development rules, each module is built sequentially in discrete phases.
+                Currently, <strong>Phase 1: Project Foundation and Dashboard</strong> is implemented.
+            </p>
+            <p>
+                This module will become operational upon user review and approval of Phase 1, strictly upholding evidence integrity, real Volatility 3 execution, and proper forensic chain-of-custody without fabricated results.
+            </p>
+            <div class="mt-4">
+                <a href="/" class="btn btn-primary">&larr; Return to Dashboard</a>
+                <a href="/cases" class="btn btn-secondary">Manage Cases</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{
+  "experiment_1_manual_vs_automated": {
+    "manual_time_seconds": 225.0,
+    "automated_time_seconds": 0.2423,
+    "time_savings_seconds": 224.76,
+    "speedup_factor": "928.6x",
+    "human_error_frequency_manual": "High (~10-25% missed linkages & transcription typos)",
+    "human_error_frequency_automated": "0% (Deterministic Schema Mapping)",
+    "status": "PASSED"
+  },
+  "experiment_2_artefact_coverage": {
+    "ground_truth_total": 28,
+    "extracted_total": 28,
+    "breakdown": {
+      "processes": "10/10",
+      "network_connections": "6/6",
+      "command_lines": "4/4",
+      "loaded_modules": "8/8"
+    },
+    "recovery_coverage_percentage": "100.0%",
+    "status": "PASSED"
+  },
+  "experiment_3_repeatability": {
+    "runs_evaluated": 3,
+    "run_details": [
+      {
+        "run_index": 1,
+        "session_id": 59,
+        "procs_count": 10,
+        "links_count": 19,
+        "findings_count": 4,
+        "findings_signature": "c68d71f87254307c3d985b864531f5b8778a09d669c996f41e89ad16965c6793"
+      },
+      {
+        "run_index": 2,
+        "session_id": 60,
+        "procs_count": 10,
+        "links_count": 19,
+        "findings_count": 4,
+        "findings_signature": "c68d71f87254307c3d985b864531f5b8778a09d669c996f41e89ad16965c6793"
+      },
+      {
+        "run_index": 3,
+        "session_id": 61,
+        "procs_count": 10,
+        "links_count": 19,
+        "findings_count": 4,
+        "findings_signature": "c68d71f87254307c3d985b864531f5b8778a09d669c996f41e89ad16965c6793"
+      }
+    ],
+    "deterministic": true,
+    "repeatability_rate": "100.0%",
+    "status": "PASSED"
+  },
+  "experiment_4_os_compatibility": {
+    "volatility_version": "2.28.2",
+    "installed": true,
+    "windows_plugin_count": 10,
+    "linux_plugin_count": 7,
+    "fallback_unknown_os_plugins": [
+      "banners.Banners"
+    ],
+    "symbols_directory_accessible": true,
+    "status": "PASSED"
+  },
+  "experiment_5_processing_performance": {
+    "sha256_hashing_throughput_mbps": 1098.9,
+    "sha256_10mb_latency_seconds": 0.0091,
+    "normalisation_latency_seconds": 0.00017,
+    "correlation_latency_seconds": 0.03789,
+    "pdf_generation_latency_seconds": 0.03,
+    "generated_pdf_size_kb": 11.64,
+    "total_processing_time_seconds": 0.0772,
+    "status": "PASSED"
+  },
+  "experiment_6_evidence_integrity": {
+    "baseline_sha256": "f2a978671857227edd976ac93bacbe907990661c1680a7c00f245da66a6c88ca",
+    "post_analysis_sha256": "f2a978671857227edd976ac93bacbe907990661c1680a7c00f245da66a6c88ca",
+    "integrity_preserved_before_after": true,
+    "tampered_sha256": "811e85df8732093eacd8b22559cbdc06f68f4774f8d2e7e1286eb50ed923a4ec",
+    "tamper_immediately_detected": true,
+    "verification_success_rate": "100.0%",
+    "status": "PASSED"
+  },
+  "experiment_7_cloud_classification": {
+    "iaas_classification": "IaaS Guest Memory Image",
+    "iaas_limitations_boundary": "IaaS evidence is scoped to the guest virtual machine boundary. Hypervisor state, physical host RAM outside the VM boundary, and adjacent tenant memory allocations are inaccessible to the tenant investigator. Volatile state captured represents the guest OS memory at snapshot time.",
+    "saas_classification": "SaaS Audit Log",
+    "saas_limitations_boundary": "Direct access to underlying SaaS provider server RAM is generally controlled by the service provider. This application records provider-approved evidence sources and does not claim direct access to SaaS host memory. Evidence scope is limited to logs, exports, and compliance archives provided through authorized tenant APIs or subpoenas.",
+    "simulated_classification": "Simulated Demonstration Record",
+    "iaas_boundary_enforced": true,
+    "saas_boundary_enforced": true,
+    "simulated_labelling_enforced": true,
+    "status": "PASSED"
+  },
+  "summary_metrics": {
+    "metric_1_recovery_coverage_pct": 100.0,
+    "metric_2_plugin_success_rate_pct": 100.0,
+    "metric_3_processing_time_seconds": 0.0772,
+    "metric_4_repeatability_rate_pct": 100.0,
+    "metric_5_integrity_verification_success_rate_pct": 100.0,
+    "metric_6_report_completeness_pct": 100.0,
+    "metric_7_manual_vs_automated_speedup": "928.6x"
+  }
+}

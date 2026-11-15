@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/phase3.css">
+<link rel="stylesheet" href="/static/css/phase4.css">
+
+<div class="evidence-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-titles">
+      <div class="breadcrumb">
+        <a href="/">Dashboard</a> &gt;
+        <a href="/correlation">Correlation Hub</a> &gt;
+        <span>Session #{{ session.id }}</span>
+      </div>
+      <h1 class="page-title">Evidence Analysis &amp; Correlation #{{ session.id }}</h1>
+      <p class="page-subtitle">
+        Case: <strong>{{ session.case_number }}</strong> &nbsp;|&nbsp;
+        Evidence: <strong>{{ session.filename }}</strong> &nbsp;|&nbsp;
+        Detected OS: <strong>{{ session.detected_os or 'Unknown' }}</strong>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button id="runPipelineBtn" class="btn btn-primary" onclick="runCorrelationPipeline({{ session.id }})">
+        &#9889; Run Correlation Pipeline
+      </button>
+      <a href="/analysis/{{ session.id }}" class="btn btn-secondary" style="text-decoration:none;">
+        &#8592; View Raw Runs
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="phase4-metrics">
+    <div class="p4-card">
+      <span class="p4-card-title">Normalised Artefacts</span>
+      <span class="p4-card-val">{{ artefacts_count }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Correlation Links</span>
+      <span class="p4-card-val">{{ links|length }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Suspicious Findings</span>
+      <span class="p4-card-val {% if severity_counts.High > 0 %}high{% elif severity_counts.Medium > 0 %}med{% else %}ok{% endif %}">
+        {{ findings|length }}
+      </span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">High Severity</span>
+      <span class="p4-card-val high">{{ severity_counts.High }}</span>
+    </div>
+    <div class="p4-card">
+      <span class="p4-card-title">Timeline Events</span>
+      <span class="p4-card-val">{{ timeline|length }}</span>
+    </div>
+  </div>
+
+  <!-- If pipeline has not been executed yet -->
+  {% if artefacts_count == 0 and findings|length == 0 %}
+  <div class="infobox" style="margin-bottom:1.5rem; background:rgba(99,102,241,0.08); border-color:rgba(99,102,241,0.3);">
+    <strong>Artefacts Pending Processing:</strong>
+    Raw plugin outputs have not yet been normalised for this session.
+    Click <strong>Run Correlation Pipeline</strong> above to extract structured artefacts, correlate relationships, run detection heuristics, and build the timeline.
+  </div>
+  {% endif %}
+
+  <!-- Main Multi-Tab Section Card -->
+  <div class="section-card">
+    <!-- Tabs Header -->
+    <div class="result-tabs">
+      <button class="result-tab-btn active" data-tab="findings" onclick="switchCorrelationTab('findings')">
+        &#128308; Suspicious Findings ({{ findings|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="timeline" onclick="switchCorrelationTab('timeline')">
+        &#9201; Activity Timeline ({{ timeline|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="links" onclick="switchCorrelationTab('links')">
+        &#128279; Correlation Links ({{ links|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="processes" onclick="switchCorrelationTab('processes')">
+        Process Hierarchy ({{ processes|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="networks" onclick="switchCorrelationTab('networks')">
+        Network Sockets ({{ networks|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="commands" onclick="switchCorrelationTab('commands')">
+        Command History ({{ commands|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="modules" onclick="switchCorrelationTab('modules')">
+        Kernel Modules ({{ modules|length }})
+      </button>
+      <button class="result-tab-btn" data-tab="traceability" onclick="switchCorrelationTab('traceability')">
+        Traceability &amp; Integrity
+      </button>
+    </div>
+
+    <!-- TAB 1: Suspicious Findings -->
+    <div class="result-tab-panel active" data-tab="findings">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Heuristic indicators flagged for analyst review. Click <em>Review</em> to record your determination.
+        </span>
+        <input class="tab-search" style="max-width:280px;margin-bottom:0;" type="text"
+               placeholder="Search findings…" oninput="filterCorrelationTable(this, 'findingsTable')">
+      </div>
+
+      {% if findings %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="findingsTable">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Category</th>
+              <th>Indicator / Title</th>
+              <th>Flag Reason &amp; Description</th>
+              <th>Confidence</th>
+              <th>Review Status</th>
+              <th>Analyst Notes</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in findings %}
+            <tr>
+              <td>
+                <span class="severity-badge {{ f.severity|lower }}">{{ f.severity }}</span>
+              </td>
+              <td><span class="cat-badge">{{ f.category }}</span></td>
+              <td><strong>{{ f.title }}</strong></td>
+              <td style="font-size:0.8rem;max-width:320px;">
+                <div>{{ f.description }}</div>
+                <div style="color:var(--text-secondary);font-style:italic;margin-top:0.2rem;">
+                  Reason: {{ f.flag_reason }}
+                </div>
+              </td>
+              <td><span class="badge-active">{{ f.confidence }}</span></td>
+              <td>
+                <span class="review-badge {{ f.review_status|lower|replace(' ', '-') }}">
+                  {{ f.review_status }}
+                </span>
+              </td>
+              <td style="font-size:0.8rem;color:var(--text-secondary);">
+                {{ f.analyst_notes or '—' }}
+                {% if f.reviewed_by %}<br><small>By: {{ f.reviewed_by }}</small>{% endif %}
+              </td>
+              <td>
+                <button class="btn btn-sm btn-secondary"
+                        onclick="openReviewModal({{ f.id }}, '{{ f.review_status }}', '{{ f.analyst_notes or '' }}')">
+                  Review
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No suspicious findings flagged yet. Run the pipeline to analyze normalized artefacts.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 2: Activity Timeline -->
+    <div class="result-tab-panel" data-tab="timeline">
+      <div style="margin-bottom:1.2rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Chronological activity stream reconstructed from authentic evidence timestamps.
+        </span>
+      </div>
+
+      {% if timeline %}
+      <div class="timeline-container">
+        {% for ev in timeline %}
+        <div class="timeline-event {% if not ev.has_timestamp %}no-time{% endif %}">
+          <div class="timeline-header">
+            {% if ev.has_timestamp %}
+            <span class="timeline-time">{{ ev.event_time }}</span>
+            {% else %}
+            <span class="timeline-time unspecified">[Timestamp Not Recorded in Memory]</span>
+            {% endif %}
+            <span class="timeline-type-badge {{ ev.event_type }}">{{ ev.event_type }}</span>
+          </div>
+          <div class="timeline-body">
+            {{ ev.event_description }}
+            <span style="font-size:0.75rem;color:var(--text-secondary);margin-left:0.5rem;">
+              (Source: {{ ev.source_plugin }})
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No timeline events generated yet.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 3: Correlation Links -->
+    <div class="result-tab-panel" data-tab="links">
+      <div style="margin-bottom:1.2rem;">
+        <span style="font-size:0.85rem;color:var(--text-secondary);">
+          Evidence connections deduced via explicit PID and socket references.
+        </span>
+      </div>
+
+      {% if links %}
+      <div class="correlation-list">
+        {% for l in links %}
+        <div class="corr-item">
+          <span class="corr-rule">{{ l.correlation_rule }}</span>
+          <span class="corr-desc">{{ l.relationship_description }}</span>
+          <span style="font-size:0.75rem;color:var(--text-secondary);">#{{ l.id }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No correlation links identified.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 4: Process Analysis -->
+    <div class="result-tab-panel" data-tab="processes">
+      <input class="tab-search" type="text" placeholder="Search processes (Name, PID, PPID)…"
+             oninput="filterCorrelationTable(this, 'procTable')">
+      {% if processes %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="procTable">
+          <thead>
+            <tr>
+              <th>PID</th>
+              <th>PPID</th>
+              <th>Process Name</th>
+              <th>Start Time</th>
+              <th>Status</th>
+              <th>Source Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in processes %}
+            <tr>
+              <td><code>{{ p.pid or '—' }}</code></td>
+              <td><code>{{ p.ppid or '—' }}</code></td>
+              <td><strong>{{ p.process_name or 'Unknown' }}</strong></td>
+              <td style="font-size:0.8rem;">{{ p.start_time or '—' }}</td>
+              <td>{{ p.process_status or 'Active' }}</td>
+              <td><span class="os-badge any">{{ p.source_plugin }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No process artefacts normalized.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 5: Network Connections -->
+    <div class="result-tab-panel" data-tab="networks">
+      <input class="tab-search" type="text" placeholder="Search network connections (IP, Port, Protocol)…"
+             oninput="filterCorrelationTable(this, 'netTable')">
+      {% if networks %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="netTable">
+          <thead>
+            <tr>
+              <th>Protocol</th>
+              <th>Local Address</th>
+              <th>Local Port</th>
+              <th>Remote Address</th>
+              <th>Remote Port</th>
+              <th>Owner PID</th>
+              <th>Source Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in networks %}
+            <tr>
+              <td><span class="badge-active">{{ n.protocol or 'TCP' }}</span></td>
+              <td><code>{{ n.local_ip or '*' }}</code></td>
+              <td>{{ n.local_port or '*' }}</td>
+              <td><code>{{ n.remote_ip or '*' }}</code></td>
+              <td>{{ n.remote_port or '*' }}</td>
+              <td><code>{{ n.net_pid or '—' }}</code></td>
+              <td><span class="os-badge any">{{ n.source_plugin }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No network artefacts normalized.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 6: Command History -->
+    <div class="result-tab-panel" data-tab="commands">
+      <input class="tab-search" type="text" placeholder="Search commands…"
+             oninput="filterCorrelationTable(this, 'cmdTable')">
+      {% if commands %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="cmdTable">
+          <thead>
+            <tr>
+              <th>PID</th>
+              <th>Command Executed</th>
+              <th>Timestamp</th>
+              <th>Source Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in commands %}
+            <tr>
+              <td><code>{{ c.command_pid or '—' }}</code></td>
+              <td style="font-family:monospace;font-size:0.8rem;word-break:break-all;">{{ c.command_text or '—' }}</td>
+              <td style="font-size:0.8rem;">{{ c.command_time or '—' }}</td>
+              <td><span class="os-badge any">{{ c.source_plugin }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No command history artefacts normalized.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 7: Loaded Modules -->
+    <div class="result-tab-panel" data-tab="modules">
+      <input class="tab-search" type="text" placeholder="Search modules (Name, Base, Size)…"
+             oninput="filterCorrelationTable(this, 'modTable')">
+      {% if modules %}
+      <div style="overflow-x:auto;">
+        <table class="parsed-table" id="modTable">
+          <thead>
+            <tr>
+              <th>Module Name</th>
+              <th>Base Address</th>
+              <th>Size</th>
+              <th>Associated Process</th>
+              <th>Source Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in modules %}
+            <tr>
+              <td><strong>{{ m.module_name or 'Unknown' }}</strong></td>
+              <td><code>{{ m.base_address or '—' }}</code></td>
+              <td>{{ m.module_size or '—' }}</td>
+              <td>{{ m.module_process or 'System Kernel' }}</td>
+              <td><span class="os-badge any">{{ m.source_plugin }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2rem;text-align:center;color:var(--text-secondary);">
+        No module artefacts normalized.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- TAB 8: Traceability & Integrity -->
+    <div class="result-tab-panel" data-tab="traceability">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+        <div class="p4-card">
+          <span class="p4-card-title">Case Metadata</span>
+          <div style="font-size:0.85rem;margin-top:0.4rem;">
+            <div><strong>Case Ref:</strong> {{ session.case_number }}</div>
+            <div><strong>Case Title:</strong> {{ session.case_title }}</div>
+          </div>
+        </div>
+        <div class="p4-card">
+          <span class="p4-card-title">Evidence File &amp; Integrity</span>
+          <div style="font-size:0.85rem;margin-top:0.4rem;">
+            <div><strong>Evidence Filename:</strong> {{ session.filename }}</div>
+            <div><strong>SHA-256 Hash:</strong> <code style="font-size:0.75rem;word-break:break-all;">{{ session.sha256_hash }}</code></div>
+            <div><strong>Integrity Check:</strong> {% if session.integrity_verified %}<span style="color:#10b981;">&#10003; Verified</span>{% else %}<span style="color:#f43f5e;">Not Verified</span>{% endif %}</div>
+          </div>
+        </div>
+        <div class="p4-card">
+          <span class="p4-card-title">Volatility 3 Engine</span>
+          <div style="font-size:0.85rem;margin-top:0.4rem;">
+            <div><strong>Volatility Version:</strong> {{ session.volatility_version }}</div>
+            <div><strong>Detected OS:</strong> {{ session.detected_os or 'Unknown' }}</div>
+            <div><strong>Plugins Run:</strong> {{ session.total_plugins }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .section-card -->
+
+</div><!-- .evidence-page -->
+
+<!-- Analyst Finding Review Modal -->
+<div id="reviewModal" class="modal-overlay">
+  <div class="modal-content-p4">
+    <div class="modal-header-p4">
+      <h3 style="margin:0;font-size:1.1rem;color:var(--text-primary);">
+        Analyst Review &mdash; Finding <span id="modalFindingId">#</span>
+      </h3>
+      <button class="modal-close-btn" onclick="closeReviewModal()">&times;</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="form-group">
+        <label for="reviewStatusSelect"><strong>Review Determination</strong> <span class="req">*</span></label>
+        <select id="reviewStatusSelect" class="form-control" style="width:100%;margin-top:0.3rem;">
+          <option value="Reviewed">Reviewed</option>
+          <option value="Confirmed Suspicious">Confirmed Suspicious</option>
+          <option value="Benign">Benign (False Positive)</option>
+          <option value="Needs Further Investigation">Needs Further Investigation</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="analystNotesInput"><strong>Analyst Commentary &amp; Notes</strong></label>
+        <textarea id="analystNotesInput" rows="4" style="width:100%;margin-top:0.3rem;background:#0d1117;color:#e2e8f0;border:1px solid #2a3045;border-radius:4px;padding:0.5rem;"
+                  placeholder="Record your investigative reasoning, cross-referenced indicators, or justification for disposition…"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="reviewerNameInput"><strong>Analyst Identity</strong></label>
+        <input id="reviewerNameInput" type="text" value="Lead Cyber Analyst"
+               style="width:100%;margin-top:0.3rem;background:#0d1117;color:#e2e8f0;border:1px solid #2a3045;border-radius:4px;padding:0.5rem;">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:0.5rem;">
+        <button class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFindingReview()">Save Determination</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/correlation.js"></script>
+{% endblock %}

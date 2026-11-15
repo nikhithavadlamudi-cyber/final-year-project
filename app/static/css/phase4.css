@@ -1,0 +1,250 @@
+/*
+  Phase 4 — Evidence Correlation & Suspicious Activity CSS
+  ==========================================================
+  Extends style.css, phase2.css, phase3.css. Cyber dark theme.
+*/
+
+/* ── Metrics Cards ─────────────────────────────────────────────────── */
+.phase4-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.p4-card {
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.p4-card-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+}
+
+.p4-card-val {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary, #f1f5f9);
+}
+
+.p4-card-val.high { color: #f43f5e; }
+.p4-card-val.med { color: #f59e0b; }
+.p4-card-val.low { color: #06b6d4; }
+.p4-card-val.ok { color: #10b981; }
+
+/* ── Severity Badges ───────────────────────────────────────────────── */
+.severity-badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.severity-badge.high {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.severity-badge.medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.severity-badge.low {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* ── Review Status Badges ──────────────────────────────────────────── */
+.review-badge {
+    display: inline-block;
+    padding: 0.18rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.review-badge.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.review-badge.reviewed {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.review-badge.confirmed-suspicious {
+    background: rgba(225, 29, 72, 0.15);
+    color: #fb7185;
+    border: 1px solid rgba(225, 29, 72, 0.3);
+}
+
+.review-badge.benign {
+    background: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.review-badge.needs-further-investigation {
+    background: rgba(168, 85, 247, 0.1);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+/* ── Correlation Links Visualizer ──────────────────────────────────── */
+.correlation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.corr-item {
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-left: 4px solid #6366f1;
+    border-radius: 6px;
+    padding: 0.85rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.corr-rule {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.corr-desc {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* ── Timeline Display ──────────────────────────────────────────────── */
+.timeline-container {
+    position: relative;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border-color, #2a3045);
+    margin-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.timeline-event {
+    position: relative;
+    background: var(--surface-2, #1a1f2e);
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+
+.timeline-event::before {
+    content: "";
+    position: absolute;
+    left: -2.45rem;
+    top: 1rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #6366f1;
+    border: 2px solid #0f172a;
+}
+
+.timeline-event.no-time::before {
+    background: #64748b;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.timeline-time {
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #38bdf8;
+}
+
+.timeline-time.unspecified {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.timeline-type-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.timeline-type-badge.ProcessStart { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+.timeline-type-badge.NetworkConn  { background: rgba(52, 211, 153, 0.1); color: #34d399; }
+.timeline-type-badge.CommandExec  { background: rgba(244, 63, 94, 0.1);  color: #fb7185; }
+.timeline-type-badge.ModuleLoad   { background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+
+.timeline-body {
+    font-size: 0.85rem;
+    color: var(--text-primary, #e2e8f0);
+}
+
+/* ── Findings Review Modal / Drawer ────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content-p4 {
+    background: #151b2b;
+    border: 1px solid var(--border-color, #2a3045);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 560px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.modal-header-p4 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
